@@ -1,0 +1,22 @@
+{
+    "name": "bugloos/laravel-localization",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Bugloos\\LaravelLocalization\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "mohammad.m",
+            "email": "mohammad.m@bugloos.com"
+        },
+        {
+            "name": "mohammad.s",
+            "email": "mohammad.s@bugloos.com"
+        }
+    ],
+    "require-dev": {
+        "laravel/pint": "^1.4"
+    }
+}
