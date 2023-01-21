@@ -6,8 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
-{
+return new class () extends Migration {
     use ConfiguredTableName;
 
     /**
@@ -17,10 +16,10 @@ return new class() extends Migration
      */
     public function up()
     {
-        Schema::create($this->getTableName(Models\Category::class), function (Blueprint $table) {
+        Schema::create($this->getTable(Models\Country::class), function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->timestamps();
+            $table->char('code', 2);
+            $table->string('name', 70);
         });
     }
 
@@ -31,6 +30,6 @@ return new class() extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('categories');
+        Schema::dropIfExists($this->getTable(Models\Country::class));
     }
 };
