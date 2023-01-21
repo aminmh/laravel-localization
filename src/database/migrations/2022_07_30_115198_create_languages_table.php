@@ -6,8 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
-{
+return new class () extends Migration {
     use ConfiguredTableName;
 
     /**
@@ -17,14 +16,14 @@ return new class() extends Migration
      */
     public function up()
     {
-        Schema::create($this->getTableName(Models\Language::class), function (Blueprint $table) {
+        Schema::create($this->getTable(Models\Language::class), function (Blueprint $table) {
             $table->id();
-            $table->char('locale', 3); // because always length is 2 character
-            $table->string('locale_name');
-            $table->string('country');
-            $table->string('country_name');
+            $table->char('locale', 10); // because always length is 10 character
+            $table->unsignedBigInteger('country_id')->nullable();
+            $table->string('name', 70);
             $table->boolean('active')->default(false);
-            $table->timestamps();
+
+            $table->foreign('country_id')->references('id')->on($this->getTable(Models\Country::class))->onDelete('CASCADE');
         });
     }
 
@@ -35,6 +34,6 @@ return new class() extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('languages');
+        Schema::dropIfExists($this->getTable(Models\Language::class));
     }
 };
