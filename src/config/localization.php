@@ -4,6 +4,8 @@ return [
     'default_locale' => 'en',
     'fallback_locale' => 'en',
 
+    'flags' => null,
+
     'tables' => [
         \Bugloos\LaravelLocalization\Models\Label::class => 'labels',
         \Bugloos\LaravelLocalization\Models\Category::class => 'categories',

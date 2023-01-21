@@ -17,14 +17,12 @@ class Language extends Model
 
     protected $hidden = ['created_at', 'updated_at', 'active', 'flag'];
 
-    protected $appends = ['flag', 'default'];
+    protected $appends = ['flag'];
 
     protected function flag(): Attribute
     {
         return Attribute::get(function () {
-            $config = config('localization.flags');
-
-            return "{$config['path']}".$this->attributes[$config['name_map_to']].".{$config['format']}";
+            return ''; //TODO Return api endpoint to download flag file
         });
     }
 
