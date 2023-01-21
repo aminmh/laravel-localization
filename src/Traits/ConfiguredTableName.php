@@ -4,8 +4,12 @@ namespace Bugloos\LaravelLocalization\Traits;
 
 trait ConfiguredTableName
 {
-    public function getTableName(string $model)
+    public function getTable(string $model = null)
     {
-        return config('localization.tables')[$model];
+        if ($model) {
+            return config('localization.tables')[$model];
+        }
+
+        return config('localization.tables')[get_class($this)];
     }
 }

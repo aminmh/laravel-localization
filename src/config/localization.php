@@ -11,5 +11,6 @@ return [
         \Bugloos\LaravelLocalization\Models\Category::class => 'categories',
         \Bugloos\LaravelLocalization\Models\Language::class => 'languages',
         \Bugloos\LaravelLocalization\Models\Translation::class => 'translations',
+        \Bugloos\LaravelLocalization\Models\Country::class => 'countries',
     ],
 ];

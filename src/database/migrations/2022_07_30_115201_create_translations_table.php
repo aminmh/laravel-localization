@@ -17,13 +17,13 @@ return new class() extends Migration
      */
     public function up()
     {
-        Schema::create($this->getTableName(Models\Translation::class), function (Blueprint $table) {
+        Schema::create($this->getTable(Models\Translation::class), function (Blueprint $table) {
             $table->id();
             $table->mediumText('text')->nullable();
             $table->unsignedBigInteger('label_id');
             $table->unsignedBigInteger('language_id');
-            $table->foreign('label_id')->on($this->getTableName(Models\Label::class))->references('id');
-            $table->foreign('language_id')->on($this->getTableName(Models\Language::class))->references('id');
+            $table->foreign('label_id')->on($this->getTable(Models\Label::class))->references('id');
+            $table->foreign('language_id')->on($this->getTable(Models\Language::class))->references('id');
             $table->timestamps();
         });
     }
@@ -35,6 +35,6 @@ return new class() extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('translations');
+        Schema::dropIfExists($this->getTable(Models\Translation::class));
     }
 };

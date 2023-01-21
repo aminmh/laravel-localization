@@ -2,6 +2,7 @@
 
 namespace Bugloos\LaravelLocalization\Models;
 
+use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,12 +11,15 @@ use Illuminate\Database\Eloquent\Model;
 class Language extends Model
 {
     use HasFactory;
+    use ConfiguredTableName;
+
+    public $timestamps = false;
 
     protected $table = 'languages';
 
-    protected $fillable = ['country', 'locale', 'active', 'country_name', 'locale_name'];
+    protected $fillable = ['locale', 'active', 'name'];
 
-    protected $hidden = ['created_at', 'updated_at', 'active', 'flag'];
+    protected $hidden = ['active'];
 
     protected $appends = ['flag'];
 
@@ -29,6 +33,11 @@ class Language extends Model
     public function translations()
     {
         return $this->hasMany(Translation::class, 'language_id');
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class, 'country_id');
     }
 
     public function avtivationToggle(bool $toggle)

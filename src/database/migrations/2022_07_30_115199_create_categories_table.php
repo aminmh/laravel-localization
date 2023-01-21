@@ -17,11 +17,9 @@ return new class() extends Migration
      */
     public function up()
     {
-        Schema::create($this->getTable(Models\Label::class), function (Blueprint $table) {
+        Schema::create($this->getTable(Models\Category::class), function (Blueprint $table) {
             $table->id();
-            $table->string('key');
-            $table->unsignedBigInteger('category_id')->nullable();
-            $table->foreign('category_id')->on($this->getTable(Models\Category::class))->references('id');
+            $table->string('name')->unique();
             $table->timestamps();
         });
     }
@@ -33,6 +31,6 @@ return new class() extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists($this->getTable(Models\Label::class));
+        Schema::dropIfExists($this->getTable(Models\Category::class));
     }
 };
