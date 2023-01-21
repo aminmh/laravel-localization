@@ -14,4 +14,28 @@ class CategoryFactory extends Factory
             'name' => fake()->unique()->word()
         ];
     }
+
+    public static function createWithRealNames()
+    {
+        return (new static())
+            ->state([])
+            ->configure()
+            ->createMany(
+                array_map(
+                    fn ($category) => ['name' => $category],
+                    static::realNames()
+                )
+            );
+    }
+
+    private static function realNames()
+    {
+        return [
+            'global',
+            'things',
+            'tech',
+            'financial',
+            'human'
+        ];
+    }
 }
