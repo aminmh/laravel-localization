@@ -10,8 +10,8 @@ class Translator extends BaseTranslator
     protected readonly NamespacedItemResolver $namespaceResolver;
 
     public function __construct(
-        protected Loader $loader,
-        private string $locale
+        Loader $loader,
+        string $locale
     ) {
         parent::__construct($loader, $locale);
         $this->namespaceResolver = new NamespacedItemResolver();
@@ -21,15 +21,17 @@ class Translator extends BaseTranslator
     {
         $locale = $locale ?: $this->getLocale();
 
-        if (false !== preg_match('/[a-zA-Z]+::/',$key)) {
+        if (false !== preg_match('/[a-zA-Z]+::(\w+\.)*|[a-zA-Z]+(\w*\.)*/', $key)) {
             // The key is not in JSON translation files
 
             [$namespace,$group,$item] = $this->namespaceResolver->parseKey($key);
 
-            $locales = $fallback ?: [$locale,$fallback];
+            $locales = $fallback ? $this->localeArray($locale) : [$locale];
 
             foreach ($locales as $locale) {
-                $this->loader->loadPhpTranslations($locale, $group, $namespace);
+                if (!is_null($line = $this->getLine($namespace, $group, $locale, $item, $replace))) {
+                    return $line;
+                }
             }
         }
     }

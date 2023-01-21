@@ -2,8 +2,11 @@
 
 namespace Bugloos\LaravelLocalization;
 
+use Bugloos\LaravelLocalization\Models\Category;
+use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Language;
 use Illuminate\Translation\FileLoader;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class Loader extends FileLoader
 {
@@ -20,10 +23,17 @@ class Loader extends FileLoader
 
     protected function loadFromDB($locale, $group)
     {
-        $locales = Language::query()
-            ->where('locale', $locale)
-            ->orWhere('country', $locale)
-            ->get()
-            ->pluck('locale');
+        $category = Category::query()->firstWhere('name', $group);
+
+        if ($category) {
+
+            $labels = Label::query()
+                ->whereRelation('category', 'id', $category->id)
+                ->with([
+                    'translations' => function (Relation $query) use ($locale) {
+                        $query->getQuery()->whereRelation('locale', 'locale', $locale);
+                    }
+                ]);
+        }
     }
 }
