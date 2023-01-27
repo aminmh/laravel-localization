@@ -21,7 +21,14 @@ class Language extends Model
 
     protected $hidden = ['active'];
 
-    protected $appends = ['flag', 'default'];
+    protected $appends = ['flag'];
+
+    protected function flag(): Attribute
+    {
+        return Attribute::get(function () {
+            return ''; //TODO Return api endpoint to download flag file
+        });
+    }
 
     public function translations()
     {
@@ -48,14 +55,5 @@ class Language extends Model
     public function scopeActives(Builder $query)
     {
         $query->where('active', 1);
-    }
-
-    protected function flag(): Attribute
-    {
-        return Attribute::get(function () {
-            $config = config('localization.flags');
-
-            return "{$config['path']}".$this->attributes[$config['name_map_to']].".{$config['format']}";
-        });
     }
 }
