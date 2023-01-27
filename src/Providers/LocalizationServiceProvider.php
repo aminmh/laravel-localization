@@ -14,7 +14,7 @@ class LocalizationServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind('localization', \Bugloos\LaravelLocalization\Translator::class);
     }
 
     /**
@@ -27,11 +27,11 @@ class LocalizationServiceProvider extends ServiceProvider
         // App::setLocale();
 
         $this->publishes([
-            __DIR__.'/../config/localization.php' => config_path('localization.php'),
+            __DIR__ . '/../config/localization.php' => config_path('localization.php'),
         ]);
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
-        $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+        $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
     }
 }

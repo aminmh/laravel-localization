@@ -2,6 +2,7 @@
 
 namespace Bugloos\LaravelLocalization;
 
+use Bugloos\LaravelLocalization\Models\Translation;
 use Illuminate\Support\NamespacedItemResolver;
 use Illuminate\Translation\Translator as BaseTranslator;
 
@@ -12,9 +13,15 @@ class Translator extends BaseTranslator
     public function __construct(
         Loader $loader,
         string $locale
-    ) {
+    )
+    {
         parent::__construct($loader, $locale);
         $this->namespaceResolver = new NamespacedItemResolver();
+    }
+
+    public function has($key, $locale = null, $fallback = true)
+    {
+
     }
 
     public function get($key, array $replace = [], $locale = null, $fallback = null)
@@ -24,7 +31,7 @@ class Translator extends BaseTranslator
         if (false !== preg_match('/[a-zA-Z]+::(\w+\.)*|[a-zA-Z]+(\w*\.)*/', $key)) {
             // The key is not in JSON translation files
 
-            [$namespace,$group,$item] = $this->namespaceResolver->parseKey($key);
+            [$namespace, $group, $item] = $this->namespaceResolver->parseKey($key);
 
             $locales = $fallback ? $this->localeArray($locale) : [$locale];
 
@@ -34,5 +41,7 @@ class Translator extends BaseTranslator
                 }
             }
         }
+
+        return $this->makeReplacements($line ?: $key, $replace);
     }
 }
