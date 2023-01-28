@@ -6,6 +6,7 @@ use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Language;
 use Bugloos\LaravelLocalization\Models\Translation;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\NamespacedItemResolver;
 use Illuminate\Translation\Translator as BaseTranslator;
 
@@ -48,13 +49,15 @@ class Translator extends BaseTranslator
     public function addLabel($key, $group): bool
     {
         if (is_numeric($group)) {
-            $group = Category::query()->find($group);
+            $group = $this->getCategory($group);
         }
 
         if (is_string($group)) {
 
             if (!$this->isGroupExists($group)) {
                 $group = $this->addCategory($group);
+            } else {
+                $group = $this->getCategory($group);
             }
         }
 
@@ -81,6 +84,17 @@ class Translator extends BaseTranslator
 
     private function isGroupExists(string $name): bool
     {
-        return Category::query()->where('name', $name)->exists();
+        return $this->getCategory($name)?->exists() ?? false;
+    }
+
+    private function getCategory(string|int $identifier): Category|Builder|null
+    {
+        $categoryQuery = Category::query();
+
+        if (is_numeric($identifier)) {
+            return $categoryQuery->find($identifier);
+        }
+
+        return $categoryQuery->firstWhere('name', $identifier);
     }
 }
