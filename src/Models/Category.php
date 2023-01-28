@@ -7,6 +7,10 @@ use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @method static Category create(array $attributes = [])
+ */
+
 class Category extends Model
 {
     use HasFactory;
