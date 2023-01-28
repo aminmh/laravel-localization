@@ -6,6 +6,7 @@ use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Language;
 use Bugloos\LaravelLocalization\Models\Translation;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\NamespacedItemResolver;
 use Illuminate\Translation\Translator as BaseTranslator;
 
@@ -83,10 +84,10 @@ class Translator extends BaseTranslator
 
     private function isGroupExists(string $name): bool
     {
-        return Category::query()->where('name', $name)->exists();
+        return $this->getCategory($name)?->exists() ?? false;
     }
 
-    private function getCategory(string|int $identifier): ?Category
+    private function getCategory(string|int $identifier): Category|Builder|null
     {
         $categoryQuery = Category::query();
 
