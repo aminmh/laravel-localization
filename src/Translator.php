@@ -48,13 +48,15 @@ class Translator extends BaseTranslator
     public function addLabel($key, $group): bool
     {
         if (is_numeric($group)) {
-            $group = Category::query()->find($group);
+            $group = $this->getCategory($group);
         }
 
         if (is_string($group)) {
 
             if (!$this->isGroupExists($group)) {
                 $group = $this->addCategory($group);
+            } else {
+                $group = $this->getCategory($group);
             }
         }
 
@@ -82,5 +84,16 @@ class Translator extends BaseTranslator
     private function isGroupExists(string $name): bool
     {
         return Category::query()->where('name', $name)->exists();
+    }
+
+    private function getCategory(string|int $identifier): ?Category
+    {
+        $categoryQuery = Category::query();
+
+        if (is_numeric($identifier)) {
+            return $categoryQuery->find($identifier);
+        }
+
+        return $categoryQuery->firstWhere('name', $identifier);
     }
 }
