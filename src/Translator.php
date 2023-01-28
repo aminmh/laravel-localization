@@ -2,6 +2,8 @@
 
 namespace Bugloos\LaravelLocalization;
 
+use Bugloos\LaravelLocalization\Models\Category;
+use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Language;
 use Bugloos\LaravelLocalization\Models\Translation;
 use Illuminate\Support\NamespacedItemResolver;
@@ -20,7 +22,7 @@ class Translator extends BaseTranslator
         $this->namespaceResolver = new NamespacedItemResolver();
     }
 
-    public function get($key, array $replace = [], $locale = null, $fallback = null)
+    public function get($key, array $replace = [], $locale = null, $fallback = null): string
     {
         $locale = $locale ?: $this->getLocale();
 
@@ -43,8 +45,42 @@ class Translator extends BaseTranslator
         return $this->makeReplacements($line ?: $key, $replace);
     }
 
-    protected function getLocaleOrFallback($locale = null, $fallback = null)
+    public function addLabel($key, $group): bool
+    {
+        if (is_numeric($group)) {
+            $group = Category::query()->find($group);
+        }
+
+        if (is_string($group)) {
+
+            if (!$this->isGroupExists($group)) {
+                $group = $this->addCategory($group);
+            }
+        }
+
+        $label = new Label([
+            'key' => $key
+        ]);
+
+        $label->category()->associate($group);
+
+        return $label->save();
+    }
+
+    public function addCategory(string $name): Category
+    {
+        return Category::create([
+            'name' => $name
+        ]);
+    }
+
+    protected function getLocaleOrFallback($locale = null, $fallback = null): array
     {
         return $fallback ? $this->localeArray($locale) : [$locale];
+    }
+
+    private function isGroupExists(string $name): bool
+    {
+        return Category::query()->where('name', $name)->exists();
     }
 }
