@@ -20,28 +20,6 @@ class Translator extends BaseTranslator
         $this->namespaceResolver = new NamespacedItemResolver();
     }
 
-    public function has($key, $locale = null, $fallback = true): bool
-    {
-        [$namespace, $group, $item] = $this->namespaceResolver->parseKey($key);
-
-        $locales = $this->getLocaleOrFallback($locale, $fallback);
-
-        $localeIds = Language::query()->whereIn('locale', $locales)->get()->pluck('id')->toArray();
-
-        if (is_null($namespace) || $namespace === '*') {
-            return (bool)Translation::query()
-                ->whereRelation('label', 'key', $item)
-                ->whereRelation('label.category', 'name', $group)
-                ->whereIn('language_id', $localeIds)
-                ->get()
-                ->count();
-        }
-
-        //TODO Handle translation exists when namespace was passed
-
-        return false;
-    }
-
     public function get($key, array $replace = [], $locale = null, $fallback = null)
     {
         $locale = $locale ?: $this->getLocale();
