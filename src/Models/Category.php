@@ -6,6 +6,7 @@ use Bugloos\LaravelLocalization\database\factories\CategoryFactory;
 use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @method static Category create(array $attributes = [])
@@ -22,17 +23,12 @@ class Category extends Model
 
     protected $hidden = ['created_at', 'updated_at'];
 
-    public function getRouteKeyName()
-    {
-        return 'name';
-    }
-
-    public function labels()
+    public function labels(): HasMany
     {
         return $this->hasMany(Label::class, 'category_id');
     }
 
-    protected static function newFactory()
+    protected static function newFactory(): CategoryFactory
     {
         return CategoryFactory::new();
     }
