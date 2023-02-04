@@ -31,6 +31,12 @@ class Label extends Model
         return $this->hasMany(Translation::class, 'label_id');
     }
 
+    public function notTranslated(): HasMany
+    {
+        return $this->hasMany(Translation::class, 'label_id')
+            ->where('text', null);
+    }
+
     public function translation(): HasOne
     {
         return $this->hasOne(Translation::class, 'label_id');

@@ -4,14 +4,17 @@ namespace Bugloos\LaravelLocalization\Facades;
 
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
+use Bugloos\LaravelLocalization\Models\Language;
 use Bugloos\LaravelLocalization\Translator;
+use Illuminate\Support\Collection;
 
 /**
  * @method static bool has(string $key, ?string $locale = null, ?string $fallback = true)
  * @method static bool addLabel(string $key, int|string|Category $group)
  * @method static Category addCategory(string $name)
  * @method static bool translate(Label|string|int $label, string $text, $category = null, ?string $locale = null)
- * @method static array translated(?string $locale = null)
+ * @method static array|Collection translated(?string $locale = null)
+ * @method static array|Collection notTranslated(string|Language|null $locale = null, $category = null)
  *
  * @see \Bugloos\LaravelLocalization\Translator
  */
