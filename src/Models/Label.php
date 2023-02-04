@@ -6,6 +6,8 @@ use Bugloos\LaravelLocalization\database\factories\LabelFactory;
 use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Label extends Model
 {
@@ -23,12 +25,12 @@ class Label extends Model
         return LabelFactory::new();
     }
 
-    public function translations()
+    public function translations(): HasMany
     {
         return $this->hasMany(Translation::class, 'label_id');
     }
 
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'category_id');
     }
