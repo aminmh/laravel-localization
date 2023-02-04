@@ -11,6 +11,7 @@ use Bugloos\LaravelLocalization\Translator;
  * @method static bool addLabel(string $key, int|string|Category $group)
  * @method static Category addCategory(string $name)
  * @method static bool translate(Label|string|int $label, string $text, $category = null, ?string $locale = null)
+ * @method static array translated(?string $locale = null)
  *
  * @see \Bugloos\LaravelLocalization\Translator
  */

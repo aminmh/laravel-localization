@@ -8,6 +8,8 @@ use Bugloos\LaravelLocalization\Models\Language;
 use Bugloos\LaravelLocalization\Models\Translation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Support\Collection;
 use Illuminate\Support\NamespacedItemResolver;
 use Illuminate\Translation\Translator as BaseTranslator;
 
@@ -98,6 +100,30 @@ class Translator extends BaseTranslator
 
     }
 
+    public function translated(?string $locale = null): array|Collection
+    {
+        $locale = $locale ?: $this->getLocale();
+
+        $isLocaleActive = (bool)$this->findLocale($locale, true);
+
+        if ($isLocaleActive) {
+            return Category::with('labels')->get()
+                ->map(static function (Category $category) use ($locale) {
+                    return [
+                        $category->getAttribute('name') => $category->labels()
+                            ->with('translation', function (Relation $query) use ($locale) {
+                                $query->whereRelation('locale', 'locale', $locale);
+                            })
+                            ->lazy(100)
+                            ->pluck('translation.text', 'key')
+                            ->all()
+                    ];
+                });
+        }
+
+        return [];
+    }
+
     protected function getLocaleOrFallback($locale = null, $fallback = null): array
     {
         return $fallback ? $this->localeArray($locale) : [$locale];
@@ -155,11 +181,21 @@ class Translator extends BaseTranslator
             ->firstWhere('key', $identifier);
     }
 
-    private function findLocale(string $locale): Builder|Language|null
+    private function findLocale(string $locale, ?bool $active = null): Builder|Language|null
     {
-        return Language::query()
+        $query = Language::query()
             ->where('locale', $locale)
-            ->orWhere('name')
+            ->orWhere('name');
+
+        if (is_null($active)) {
+            return $query->first();
+        }
+
+        if ($active) {
+            return $query->where('active', true)->first();
+        }
+
+        return $query->where('active', false)
             ->first();
     }
 

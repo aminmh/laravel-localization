@@ -11,7 +11,7 @@ use Illuminate\Support\Arr;
 
 class Loader extends FileLoader
 {
-    public function load($locale, $group, $namespace = null):array
+    public function load($locale, $group, $namespace = null): array
     {
         $lines = parent::load($locale, $group, $namespace);
 
@@ -26,19 +26,12 @@ class Loader extends FileLoader
     {
         return Label::query()
             ->whereRelation('category', 'name', $group)
-            ->with([
-                'translations' => function (Relation $query) use ($locale) {
-                    $query->getQuery()->whereRelation('locale', 'locale', $locale);
-                }
-            ])
-            ->get()
-            ->map(function ($label) {
-                return array_merge(
-                    $label->toArray(),
-                    ['translations' => Arr::get($label->translations->first(), 'text')]
-                );
+            ->with(
+                'translation', static function (Relation $query) use ($locale) {
+                $query->whereRelation('locale', 'locale', $locale);
             })
-            ->pluck('translations', 'key')
+            ->get()
+            ->pluck('translation', 'key')
             ->toArray();
     }
 }
