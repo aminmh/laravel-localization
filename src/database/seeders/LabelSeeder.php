@@ -2,7 +2,6 @@
 
 namespace Bugloos\LaravelLocalization\database\seeders;
 
-use Bugloos\LaravelLocalization\database\factories\CategoryFactory;
 use Bugloos\LaravelLocalization\database\factories\LabelFactory;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;

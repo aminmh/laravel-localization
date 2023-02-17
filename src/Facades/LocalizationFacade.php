@@ -5,7 +5,6 @@ namespace Bugloos\LaravelLocalization\Facades;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Language;
-use Bugloos\LaravelLocalization\Translator;
 use Illuminate\Support\Collection;
 
 /**
@@ -15,12 +14,12 @@ use Illuminate\Support\Collection;
  * @method static bool translate(Label|string|int $label, string $text, $category = null, ?string $locale = null)
  * @method static array|Collection translated(?string $locale = null)
  * @method static array|Collection notTranslated(string|Language|null $locale = null, $category = null)
+ * @method static string flagPath(string $locale)
  *
  * @see \Bugloos\LaravelLocalization\Translator
  */
 class LocalizationFacade extends \Illuminate\Support\Facades\Facade
 {
-
     protected static function getFacadeAccessor(): string
     {
         return 'localization';

@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Enumerable;
 use Illuminate\Support\NamespacedItemResolver;
 use Illuminate\Translation\Translator as BaseTranslator;
 
@@ -57,7 +56,6 @@ class Translator extends BaseTranslator
         }
 
         if (is_string($group)) {
-
             if (!$this->isGroupExists($group)) {
                 $group = $this->addCategory($group);
             } else {
@@ -66,7 +64,7 @@ class Translator extends BaseTranslator
         }
 
         $label = new Label([
-            'key' => $key
+            'key' => $key,
         ]);
 
         $label->category()->associate($group);
@@ -77,7 +75,7 @@ class Translator extends BaseTranslator
     public function addCategory(string $name): Category
     {
         return Category::create([
-            'name' => $name
+            'name' => $name,
         ]);
     }
 
@@ -88,7 +86,7 @@ class Translator extends BaseTranslator
         }
 
         if ($locale) {
-            $locale = $this->findLocale($locale)->first() ?? throw new ModelNotFoundException(sprintf("The %s not found!", $locale), 404);
+            $locale = $this->findLocale($locale)->first() ?? throw new ModelNotFoundException(sprintf('The %s not found!', $locale), 404);
         } else {
             $locale = $this->findLocale($this->getLocale())->first();
         }
@@ -98,7 +96,6 @@ class Translator extends BaseTranslator
         }
 
         return $this->createNewTranslation($label, $translation, $locale);
-
     }
 
     public function translated(?string $locale = null): array|Collection
@@ -117,7 +114,7 @@ class Translator extends BaseTranslator
                             })
                             ->lazy(100)
                             ->pluck('translation.text', 'key')
-                            ->all()
+                            ->all(),
                     ];
                 });
         }
@@ -153,16 +150,30 @@ class Translator extends BaseTranslator
                         })
                 );
             });
-
     }
 
-    public function notTranslatedInLocale(string|Language $locale)
+    public function flagPath(string $locale): string
     {
+        if (str_contains($locale, '_')) {
+            $locale = explode('_', $locale)[0]; // en_US => en
+        }
 
+        $path = config('localization.flag.path') ?? realpath(Language::DEFAULT_FLAG_PATH);
+
+        $mimeType = config('localization.flag.mime_type') ?? 'png';
+
+        if (str_ends_with($path, '/')) {
+            $path = substr($path, 0, strrpos($path, '/') - 1);
+        }
+
+        return ($path .= "/{$locale}.{$mimeType}");
+    }
+
+    private function notTranslatedInLocale(string|Language $locale)
+    {
         if (is_string($locale)) {
             $locale = $this->findLocale($locale, true);
         }
-
 
         return $locale->setAttribute(
             'labels',
@@ -170,10 +181,9 @@ class Translator extends BaseTranslator
                 $query->whereRelation('locale', 'locale', $locale->getAttribute('locale'));
             })->get()
         );
-
     }
 
-    public function notTranslatedInCategory($category)
+    private function notTranslatedInCategory($category)
     {
         if (!$category instanceof Category) {
             $category = $this->getCategory($category);
@@ -191,13 +201,14 @@ class Translator extends BaseTranslator
     private function updateTranslation(Translation $oldTranslation, string $newTranslationText): bool
     {
         $oldTranslation->setAttribute('text', $newTranslationText);
+
         return $oldTranslation->save();
     }
 
     private function createNewTranslation($label, string $translation, ?Language $locale = null): bool
     {
         $translationModel = new Translation([
-            'text' => $translation
+            'text' => $translation,
         ]);
 
         $translationModel->label()->associate($label);
@@ -230,7 +241,7 @@ class Translator extends BaseTranslator
         if (is_numeric($identifier)) {
             return $labelQuery->find($identifier);
         } elseif (is_null($category)) {
-            throw new \BadMethodCallException("For find label with key, category is required!", 400);
+            throw new \BadMethodCallException('For find label with key, category is required!', 400);
         }
 
         $category = $this->getCategory($category);

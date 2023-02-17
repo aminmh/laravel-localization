@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @method static Category create(array $attributes = [])
  */
-
 class Category extends Model
 {
     use HasFactory;
