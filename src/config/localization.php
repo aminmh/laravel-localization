@@ -4,7 +4,11 @@ return [
     'default_locale' => 'en',
     'fallback_locale' => 'en',
 
-    'flags' => null,
+    'flag' => [
+        'path' => null, //Absolute flag files path
+        'mime_type' => 'png',
+    ],
+
 
     'tables' => [
         \Bugloos\LaravelLocalization\Models\Label::class => 'labels',

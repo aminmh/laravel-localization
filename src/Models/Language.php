@@ -2,6 +2,7 @@
 
 namespace Bugloos\LaravelLocalization\Models;
 
+use Bugloos\LaravelLocalization\Controller\LanguageController;
 use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -10,11 +11,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string $locale
+ * @property bool $active
+ * @property string $name
+ */
 class Language extends Model
 {
     use HasFactory;
     use ConfiguredTableName;
 
+    public const DEFAULT_FLAG_PATH = __DIR__ . '/../resources/assets/flags';
     public $timestamps = false;
 
     protected $table = 'languages';
@@ -28,7 +35,7 @@ class Language extends Model
     protected function flag(): Attribute
     {
         return Attribute::get(function () {
-            return ''; //TODO Return api endpoint to download flag file
+            return action([LanguageController::class, 'flag'], ['locale' => $this->locale]);
         });
     }
 

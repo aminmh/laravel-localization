@@ -15,7 +15,7 @@ class TranslationSeeder extends Seeder
 
     public function run()
     {
-        $locales = Language::query()->whereIn('locale', ['nl','en'])->get()->pluck('id', 'locale');
+        $locales = Language::query()->whereIn('locale', ['nl', 'en'])->get()->pluck('id', 'locale');
 
         foreach ($locales as $locale => $localeId) {
             DB::table($this->getTable(Translation::class))->insert(
@@ -23,7 +23,7 @@ class TranslationSeeder extends Seeder
                     fn ($label) => [
                         'text' => $this->{$locale}($label->key),
                         'label_id' => $label->id,
-                        'language_id' => $localeId
+                        'language_id' => $localeId,
                     ]
                 )->toArray()
             );
@@ -32,7 +32,7 @@ class TranslationSeeder extends Seeder
 
     private function nl(string $key)
     {
-        return array(
+        return [
             'car' => 'auto',
             'home' => 'thuis',
             'job' => 'functie',
@@ -59,7 +59,7 @@ class TranslationSeeder extends Seeder
             'realationship' => 'relatie',
             'dog' => 'hond',
             'engineer' => 'ingenieur',
-        )[$key];
+        ][$key];
     }
 
     private function en(string $key)
@@ -90,7 +90,7 @@ class TranslationSeeder extends Seeder
             'friend',
             'realationship',
             'dog',
-            'engineer'
+            'engineer',
         ];
 
         return array_map(

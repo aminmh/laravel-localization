@@ -11,7 +11,7 @@ class CategoryFactory extends Factory
     public function definition()
     {
         return [
-            'name' => fake()->unique()->word()
+            'name' => fake()->unique()->word(),
         ];
     }
 
@@ -35,7 +35,7 @@ class CategoryFactory extends Factory
             'things',
             'tech',
             'financial',
-            'human'
+            'human',
         ];
     }
 }

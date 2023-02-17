@@ -2,7 +2,8 @@
 
 namespace Bugloos\LaravelLocalization\Providers;
 
-use Bugloos\LaravelLocalization\{Loader,Translator};
+use Bugloos\LaravelLocalization\Loader;
+use Bugloos\LaravelLocalization\Translator;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 

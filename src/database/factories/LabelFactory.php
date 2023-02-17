@@ -11,7 +11,7 @@ class LabelFactory extends Factory
     public function definition()
     {
         return [
-            'key' => fake()->word()
+            'key' => fake()->word(),
         ];
     }
 
@@ -65,7 +65,7 @@ class LabelFactory extends Factory
             'friend',
             'realationship',
             'dog',
-            'engineer'
+            'engineer',
         ];
     }
 }
