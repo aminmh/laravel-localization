@@ -21,6 +21,19 @@ class Label extends Model
 
     protected $hidden = ['created_at', 'updated_at'];
 
+    public static function findBy(string|int $identifier, string $category)
+    {
+        $labelQuery = static::query();
+
+        if (is_numeric($identifier)) {
+            return $labelQuery->find($identifier);
+        }
+
+        return $labelQuery
+            ->whereRelation('category', 'name', $category)
+            ->firstWhere('key', $identifier);
+    }
+
     protected static function newFactory()
     {
         return LabelFactory::new();

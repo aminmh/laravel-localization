@@ -9,6 +9,8 @@ use Bugloos\LaravelLocalization\Models\Translation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\NamespacedItemResolver;
 use Illuminate\Translation\Translator as BaseTranslator;
@@ -49,25 +51,17 @@ class Translator extends BaseTranslator
         return $this->makeReplacements($line ?: $key, $replace);
     }
 
-    public function addLabel($key, $group): bool
+    public function addLabel($key, $category): bool
     {
-        if (is_numeric($group)) {
-            $group = $this->getCategory($group);
-        }
-
-        if (is_string($group)) {
-            if (!$this->isGroupExists($group)) {
-                $group = $this->addCategory($group);
-            } else {
-                $group = $this->getCategory($group);
-            }
+        if (!$category instanceof Category) {
+            $category = Category::findBy($category) ?? throw new ModelNotFoundException(sprintf("The category %s not found!", $category), 404);
         }
 
         $label = new Label([
             'key' => $key,
         ]);
 
-        $label->category()->associate($group);
+        $label->category()->associate($category);
 
         return $label->save();
     }
@@ -79,23 +73,50 @@ class Translator extends BaseTranslator
         ]);
     }
 
-    public function translate($label, string $translation, $category = null, ?string $locale = null): bool
+    public function translate(Label $label, string $translation, ?string $locale = null): bool
     {
-        if (!$label instanceof Label) {
-            $label = $this->getLabel($label, $category);
-        }
-
         if ($locale) {
-            $locale = $this->findLocale($locale)->first() ?? throw new ModelNotFoundException(sprintf('The %s not found!', $locale), 404);
+            $localeObject = $this->findLocale($locale)->first() ?? throw new ModelNotFoundException(sprintf('The %s not found!', $locale), 404);
         } else {
-            $locale = $this->findLocale($this->getLocale())->first();
+            $localeObject = $this->findLocale($this->getLocale())->first();
         }
 
-        if (false !== ($oldTranslation = $this->hasTranslationWithLocale($label, $locale))) {
+        if (false !== ($oldTranslation = $this->hasTranslationWithLocale($label, $localeObject))) {
             return $this->updateTranslation($oldTranslation, $translation);
         }
 
         return $this->createNewTranslation($label, $translation, $locale);
+    }
+
+    public function bulkTranslate(Label $label, array $translations): bool
+    {
+        /** @var Collection $locales */
+        $locales = Language::query()->scopes('actives')
+            ->whereIn('locale', array_keys($translations))
+            ->get()
+            ->flatMap(static function (Language $locale) {
+                return [$locale->getAttribute('locale') => $locale];
+            });
+
+        $newTranslationBag = [];
+
+        foreach ($translations as $locale => $translation) {
+            if ($locales->has($locale)) {
+                $translationObject = new Translation([
+                    'text' => $translation
+                ]);
+
+                $translationObject->locale()->associate($locales[$locale]);
+                $translationObject->label()->associate($label);
+                $newTranslationBag[] = Arr::except($translationObject->toArray(), ['label', 'locale']);
+            }
+        }
+
+        try {
+            return Translation::query()->insert($newTranslationBag);
+        } catch (QueryException $ex) {
+            // TODO: Throw custom exception
+        }
     }
 
     public function translated(?string $locale = null): array|Collection
@@ -186,7 +207,7 @@ class Translator extends BaseTranslator
     private function notTranslatedInCategory($category)
     {
         if (!$category instanceof Category) {
-            $category = $this->getCategory($category);
+            $category = Category::findBy($category);
         }
 
         return $category->labels()
@@ -218,39 +239,6 @@ class Translator extends BaseTranslator
         return $translationModel->save();
     }
 
-    private function isGroupExists(string $name): bool
-    {
-        return $this->getCategory($name)?->exists() ?? false;
-    }
-
-    private function getCategory(string|int $identifier): Category|Builder|null
-    {
-        $categoryQuery = Category::query();
-
-        if (is_numeric($identifier)) {
-            return $categoryQuery->find($identifier);
-        }
-
-        return $categoryQuery->firstWhere('name', $identifier);
-    }
-
-    private function getLabel(string|int $identifier, $category = null): Label|Builder|null
-    {
-        $labelQuery = Label::query();
-
-        if (is_numeric($identifier)) {
-            return $labelQuery->find($identifier);
-        } elseif (is_null($category)) {
-            throw new \BadMethodCallException('For find label with key, category is required!', 400);
-        }
-
-        $category = $this->getCategory($category);
-
-        return $labelQuery
-            ->whereRelation('category', 'name', $category->getAttribute('name'))
-            ->firstWhere('key', $identifier);
-    }
-
     private function findLocale(?string $locale = null, ?bool $active = null): Builder
     {
         $query = Language::query();
@@ -280,6 +268,6 @@ class Translator extends BaseTranslator
                 }
             );
 
-        return $query->exists() ? $query->first() : false;
+        return $query->first() ?: false;
     }
 }
