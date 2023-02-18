@@ -4,6 +4,8 @@ namespace Bugloos\LaravelLocalization\Models;
 
 use Bugloos\LaravelLocalization\database\factories\CategoryFactory;
 use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -21,6 +23,17 @@ class Category extends Model
     protected $fillable = ['name'];
 
     protected $hidden = ['created_at', 'updated_at'];
+
+    public static function findBy(string|int $identifier): Model|Builder|null
+    {
+        $categoryQuery = static::query();
+
+        if (is_numeric($identifier)) {
+            return $categoryQuery->find($identifier);
+        }
+
+        return $categoryQuery->firstWhere('name', $identifier);
+    }
 
     public function labels(): HasMany
     {
