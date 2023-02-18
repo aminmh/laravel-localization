@@ -6,8 +6,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class() extends Migration
-{
+return new class() extends Migration {
     use ConfiguredTableName;
 
     /**
@@ -24,6 +23,7 @@ return new class() extends Migration
             $table->unsignedBigInteger('language_id');
             $table->foreign('label_id')->on($this->getTable(Models\Label::class))->references('id');
             $table->foreign('language_id')->on($this->getTable(Models\Language::class))->references('id');
+            $table->unique(['label_id', 'language_id']);
             $table->timestamps();
         });
     }

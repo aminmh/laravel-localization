@@ -28,7 +28,7 @@ class Translator extends BaseTranslator
         $this->namespaceResolver = new NamespacedItemResolver();
     }
 
-    public function get($key, array $replace = [], $locale = null, $fallback = null): string
+    public function get($key, array $replace = [], $locale = null, $fallback = true): string
     {
         $locale = $locale ?: $this->getLocale();
 
@@ -37,10 +37,8 @@ class Translator extends BaseTranslator
 
             [$namespace, $group, $item] = $this->namespaceResolver->parseKey($key);
 
-            $locales = $this->getLocaleOrFallback($locale, $fallback);
-
-            foreach ($locales as $locale) {
-                if (!is_null($line = $this->getLine($namespace, $group, $locale, $item, $replace))) {
+            foreach ($this->getLocaleOrFallback($locale, $fallback) as $localeOrFallback) {
+                if (!is_null($line = $this->getLine($namespace, $group, $localeOrFallback, $item, $replace))) {
                     return $line;
                 }
             }
@@ -51,7 +49,7 @@ class Translator extends BaseTranslator
         return $this->makeReplacements($line ?: $key, $replace);
     }
 
-    public function addLabel($key, $category): bool
+    public function addLabel($key, $category): Label
     {
         if (!$category instanceof Category) {
             $category = Category::findBy($category) ?? throw new ModelNotFoundException(sprintf("The category %s not found!", $category), 404);
@@ -63,7 +61,9 @@ class Translator extends BaseTranslator
 
         $label->category()->associate($category);
 
-        return $label->save();
+        $label->save();
+
+        return $label;
     }
 
     public function addCategory(string $name): Category
@@ -85,7 +85,7 @@ class Translator extends BaseTranslator
             return $this->updateTranslation($oldTranslation, $translation);
         }
 
-        return $this->createNewTranslation($label, $translation, $locale);
+        return $this->createNewTranslation($label, $translation, $localeObject);
     }
 
     public function bulkTranslate(Label $label, array $translations): bool
@@ -176,7 +176,7 @@ class Translator extends BaseTranslator
     public function flagPath(string $locale): string
     {
         if (str_contains($locale, '_')) {
-            $locale = explode('_', $locale)[0]; // en_US => en
+            $locale = explode('_', $locale)[0]; // en => en
         }
 
         $path = config('localization.flag.path') ?? realpath(Language::DEFAULT_FLAG_PATH);
@@ -214,7 +214,7 @@ class Translator extends BaseTranslator
             ->whereHas('notTranslated')->get();
     }
 
-    protected function getLocaleOrFallback($locale = null, $fallback = null): array
+    protected function getLocaleOrFallback($locale, bool $fallback): array
     {
         return $fallback ? $this->localeArray($locale) : [$locale];
     }

@@ -3,6 +3,7 @@
 namespace Bugloos\LaravelLocalization\Providers;
 
 use Bugloos\LaravelLocalization\Loader;
+use Bugloos\LaravelLocalization\Migrator\Migrator;
 use Bugloos\LaravelLocalization\Translator;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
@@ -14,10 +15,14 @@ class LocalizationServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
         $this->app->bind('localization', function (Application $app) {
             return new Translator(new Loader($app['files'], $app['path.lang']), $app->getLocale());
+        });
+
+        $this->app->bind('localization.migrator', function (Application $app) {
+            return new Migrator($this->app['localization']);
         });
     }
 

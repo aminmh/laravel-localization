@@ -32,11 +32,19 @@ class Language extends Model
 
     protected $appends = ['flag'];
 
-    protected function flag(): Attribute
+    public static function findOnly(string $locale, ?bool $active = null)
     {
-        return Attribute::get(function () {
-            return action([LanguageController::class, 'flag'], ['locale' => $this->locale]);
-        });
+        $query = static::query();
+
+        if ($active) {
+            $query = $query->scopes('actives');
+        }
+
+        if ($active === false) {
+            $query = $query->scopes('inActives');
+        }
+
+        return $query->where('locale', $locale)->get();
     }
 
     public function translations(): HasMany
@@ -64,5 +72,12 @@ class Language extends Model
     public function scopeActives(Builder $query)
     {
         $query->where('active', 1);
+    }
+
+    protected function flag(): Attribute
+    {
+        return Attribute::get(function () {
+            return action([LanguageController::class, 'flag'], ['locale' => $this->locale]);
+        });
     }
 }
