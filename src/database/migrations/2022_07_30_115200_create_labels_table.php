@@ -21,7 +21,7 @@ return new class() extends Migration
             $table->id();
             $table->string('key');
             $table->unsignedBigInteger('category_id')->nullable();
-            $table->foreign('category_id')->on($this->getTable(Models\Category::class))->references('id');
+            $table->foreign('category_id')->on($this->getTable(Models\Category::class))->references('id')->cascadeOnDelete();
             $table->timestamps();
         });
     }
