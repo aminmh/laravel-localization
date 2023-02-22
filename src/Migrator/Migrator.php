@@ -2,9 +2,13 @@
 
 namespace Bugloos\LaravelLocalization\Migrator;
 
+use Bugloos\LaravelLocalization\Models\Category;
+use Bugloos\LaravelLocalization\Models\Label;
+use Bugloos\LaravelLocalization\Models\Translation;
 use Bugloos\LaravelLocalization\Translator;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use JsonException;
 
 class Migrator
@@ -16,9 +20,9 @@ class Migrator
     /**
      * @throws JsonException
      */
-    public function migrate(string $path): void
+    public function migrate(string $path, array $filter = []): void
     {
-        foreach ($this->getRecursiveDirAndFiles($path) as $filePath) {
+        foreach ($this->getRecursiveDirAndFiles($path, $filter) as $filePath) {
             match (pathinfo($filePath, PATHINFO_EXTENSION)) {
                 'php' => $this->loadAndStoreArray(require $filePath, $this->parsePhpPath($filePath)['category'], $this->parsePhpPath($filePath)['locale']),
                 'json' => $this->normalizeFlatArray2Associate($this->convertNestedJson2FlatArray($filePath), $this->parseJsonPath($filePath)['locale']),
@@ -27,7 +31,20 @@ class Migrator
         }
     }
 
-    private function parsePhpPath(string $path): array
+    public function refresh(): bool
+    {
+        try {
+            DB::table(config('localization.tables')[Translation::class])->truncate();
+            DB::table(config('localization.tables')[Label::class])->truncate();
+            DB::table(config('localization.tables')[Category::class])->truncate();
+
+            return true;
+        } catch (QueryException $ex) {
+            return false;
+        }
+    }
+
+    protected function parsePhpPath(string $path): array
     {
         $directory = dirname($path);
 
@@ -37,7 +54,7 @@ class Migrator
         ];
     }
 
-    private function parseJsonPath(string $path): array
+    protected function parseJsonPath(string $path): array
     {
         return [
             'locale' => pathinfo($path, PATHINFO_FILENAME)
@@ -47,7 +64,7 @@ class Migrator
     /**
      * @throws JsonException
      */
-    public function convertNestedJson2FlatArray(string $path): array
+    private function convertNestedJson2FlatArray(string $path): array
     {
         $decodedJson = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
 
@@ -68,13 +85,12 @@ class Migrator
         return $result;
     }
 
-    public function normalizeFlatArray2Associate(array $normalizedData, string $locale): bool
+    private function normalizeFlatArray2Associate(array $normalizedData, string $locale): bool
     {
         $data = [];
 
         try {
             while ($payload = key($normalizedData)) {
-
                 $sections = explode('.', $payload);
                 $category = $sections[0];
 
@@ -109,37 +125,40 @@ class Migrator
             }
 
             return true;
-
         } catch (QueryException $ex) {
             return false;
         }
-
     }
 
-    public function getRecursiveDirAndFiles(string $path): array
+    private function getRecursiveDirAndFiles(string $path, array $filter = []): array
     {
-        $dirOrFiles = $this->normalizePath($path);
+        $dirOrFiles = $this->normalizePath($path, $filter);
 
         $result = [];
 
         foreach ($dirOrFiles as $dirOrFile) {
-
             $currentPath = $path . DIRECTORY_SEPARATOR . $dirOrFile;
 
-            if (is_dir($currentPath)) {
-                $result[] = $this->getRecursiveDirAndFiles($currentPath);
-            } else {
-                $result[] = $currentPath; //Absolutely is File
+            if (!is_dir($currentPath)) {
+                $result[] = $currentPath;
+                continue;
             }
+
+            $result[] = $this->getRecursiveDirAndFiles($currentPath);
         }
 
         return Arr::flatten($result);
     }
 
-    private function normalizePath(string $path): array
+    private function normalizePath(string $path, array $filter = []): array
     {
         if (is_dir(realpath($path))) {
-            return array_diff(scandir($path), ['.', '..']);
+            $dirs = array_diff(scandir($path), ['.', '..']);
+
+            if (!empty($filter)) {
+                return array_filter($dirs, static fn (string $dir) => in_array($dir, $filter, true));
+            }
+            return $dirs;
         }
 
         return [$path];
