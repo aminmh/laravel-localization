@@ -12,7 +12,7 @@ class Loader extends FileLoader
     {
         $lines = parent::load($locale, $group, $namespace);
 
-        if (! count($lines)) {
+        if (empty($lines)) {
             return $this->loadFromDB($locale, $group);
         }
 
@@ -25,8 +25,8 @@ class Loader extends FileLoader
             ->whereRelation('category', 'name', $group)
             ->with(
                 'translation', static function (Relation $query) use ($locale) {
-                    $query->whereRelation('locale', 'locale', $locale);
-                })
+                $query->whereRelation('locale', 'locale', $locale);
+            })
             ->get()
             ->pluck('translation', 'key')
             ->toArray();
