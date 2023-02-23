@@ -152,6 +152,10 @@ class Migrator
 
     private function normalizePath(string $path, array $filter = []): array
     {
+        if (!$this->isSubDirectoryOfLang($path)) {
+            throw new \BadMethodCallException(sprintf("The given path should be point to directory and also sub-directory of %s !", base_path('/lang')), 400);
+        }
+
         if (is_dir(realpath($path))) {
             $dirs = array_diff(scandir($path), ['.', '..']);
 
@@ -162,5 +166,18 @@ class Migrator
         }
 
         return [$path];
+    }
+
+    private function isSubDirectoryOfLang(string $path): bool
+    {
+        if (!is_dir($path) || $path === base_path()) {
+            return false;
+        }
+
+        if (($parentDir = dirname($path)) !== base_path('/lang')) {
+            return $this->isSubDirectoryOfLang($parentDir);
+        }
+
+        return true;
     }
 }
