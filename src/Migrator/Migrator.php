@@ -13,7 +13,6 @@ use Bugloos\LaravelLocalization\Translator;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
-use JsonException;
 
 class Migrator
 {

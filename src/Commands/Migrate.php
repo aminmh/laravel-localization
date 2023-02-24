@@ -2,7 +2,9 @@
 
 namespace Bugloos\LaravelLocalization\Commands;
 
+use Bugloos\LaravelLocalization\Facades\MigratorFacade;
 use Illuminate\Console\Command;
+use Illuminate\Database\QueryException;
 use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\NotFoundExceptionInterface;
 
@@ -13,7 +15,7 @@ class Migrate extends Command
      *
      * @var string
      */
-    protected $signature = 'localization:migrate';
+    protected $signature = 'localization:migrate {path}';
 
     /**
      * The console command description.
@@ -30,9 +32,9 @@ class Migrate extends Command
     public function handle()
     {
         try {
-            $this->getLaravel()->get('migrator');
-        } catch (NotFoundExceptionInterface $e) {
-        } catch (ContainerExceptionInterface $e) {
+            MigratorFacade::load($this->argument('path'));
+        } catch (QueryException $ex) {
+            $this->error($ex->getMessage());
         }
         return Command::SUCCESS;
     }
