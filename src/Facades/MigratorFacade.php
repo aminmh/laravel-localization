@@ -3,9 +3,7 @@
 namespace Bugloos\LaravelLocalization\Facades;
 
 /**
- * @method static void migrate(string $path)
- * @method static array convertNestedJson2FlatArray(string $path)
- * @method static bool normalizeFlatArray2Associate(array $normalizedData, string $locale)
+ * @method static void load(string $path, array $filter = [])
  *
  * @see \Bugloos\LaravelLocalization\Migrator\Migrator
  */

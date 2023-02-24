@@ -2,6 +2,7 @@
 
 namespace Bugloos\LaravelLocalization\Providers;
 
+use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
 use Bugloos\LaravelLocalization\Loader;
 use Bugloos\LaravelLocalization\Migrator\Migrator;
 use Bugloos\LaravelLocalization\Translator;
@@ -24,6 +25,8 @@ class LocalizationServiceProvider extends ServiceProvider
         $this->app->bind('localization.migrator', function (Application $app) {
             return new Migrator($this->app['localization']);
         });
+
+        AbstractWriter::setTranslator($this->app['localization']);
     }
 
     /**
