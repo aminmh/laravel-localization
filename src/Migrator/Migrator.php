@@ -2,6 +2,10 @@
 
 namespace Bugloos\LaravelLocalization\Migrator;
 
+use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\JsonReaderStrategy;
+use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\PhpReaderStrategy;
+use Bugloos\LaravelLocalization\Migrator\Writers\JsonWriter;
+use Bugloos\LaravelLocalization\Migrator\Writers\PhpWriter;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Translation;
@@ -13,21 +17,32 @@ use JsonException;
 
 class Migrator
 {
+    /**
+     * @var array<PhpWriter> $strategies
+     */
+    private array $strategies = [];
+
     public function __construct(private readonly Translator $translator)
     {
     }
 
-    /**
-     * @throws JsonException
-     */
-    public function migrate(string $path, array $filter = []): void
+    public function load(string $path, array $filter = []): void
     {
         foreach ($this->getRecursiveDirAndFiles($path, $filter) as $filePath) {
-            match (pathinfo($filePath, PATHINFO_EXTENSION)) {
-                'php' => $this->loadAndStoreArray(require $filePath, $this->parsePhpPath($filePath)['category'], $this->parsePhpPath($filePath)['locale']),
-                'json' => $this->normalizeFlatArray2Associate($this->convertNestedJson2FlatArray($filePath), $this->parseJsonPath($filePath)['locale']),
+            $this->strategies[] = match (pathinfo($filePath, PATHINFO_EXTENSION)) {
+                'php' => new PhpWriter(new PhpReaderStrategy($filePath)),
+                'json' => new JsonWriter(new JsonReaderStrategy($filePath)),
                 'yaml', 'yml' => null
             };
+        }
+
+        $this->migrate();
+    }
+
+    private function migrate(): void
+    {
+        foreach ($this->strategies as $strategy) {
+            $strategy->save();
         }
     }
 
@@ -44,107 +59,21 @@ class Migrator
         }
     }
 
-    protected function parsePhpPath(string $path): array
-    {
-        $directory = dirname($path);
-
-        return [
-            'category' => pathinfo($path, PATHINFO_FILENAME),
-            'locale' => substr($directory, strrpos($directory, '/') + 1) // var/www/html/routes/../lang/en => en
-        ];
-    }
-
-    protected function parseJsonPath(string $path): array
-    {
-        return [
-            'locale' => pathinfo($path, PATHINFO_FILENAME)
-        ];
-    }
-
-    /**
-     * @throws JsonException
-     */
-    private function convertNestedJson2FlatArray(string $path): array
-    {
-        $decodedJson = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
-
-        $recursiveIterator = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($decodedJson));
-
-        $result = [];
-
-        foreach ($recursiveIterator as $leaf) {
-            $keys = [];
-
-            foreach (range(0, $recursiveIterator->getDepth()) as $depth) {
-                $keys[] = $recursiveIterator->getSubIterator($depth)?->key();
-            }
-
-            $result[implode('.', $keys)] = $leaf;
-        }
-
-        return $result;
-    }
-
-    private function normalizeFlatArray2Associate(array $normalizedData, string $locale): bool
-    {
-        $data = [];
-
-        try {
-            while ($payload = key($normalizedData)) {
-                $sections = explode('.', $payload);
-                $category = $sections[0];
-
-                if (!array_key_exists($category, $data)) {
-                    $data[$category] = [];
-                }
-
-                $label = implode('.', array_slice($sections, 1));
-                $data[$category][$label] = reset($normalizedData);
-                unset($normalizedData[$payload]);
-            }
-
-            foreach ($data as $category => $labelAndTranslate) {
-                $this->loadAndStoreArray($labelAndTranslate, $category, $locale);
-            }
-
-            return true;
-        } catch (\Exception $ex) {
-            return false;
-        }
-    }
-
-    private function loadAndStoreArray(array $labelsAndTranslate, string $category, string $locale): bool
-    {
-        try {
-            $categoryObject = $this->translator->addCategory($category);
-
-            foreach ($labelsAndTranslate as $label => $translate) {
-                $labelObject = $this->translator->addLabel($label, $categoryObject);
-
-                $this->translator->translate($labelObject, $translate, $locale);
-            }
-
-            return true;
-        } catch (QueryException $ex) {
-            return false;
-        }
-    }
-
     private function getRecursiveDirAndFiles(string $path, array $filter = []): array
     {
-        $dirOrFiles = $this->normalizePath($path, $filter);
+        $dirOrFiles = $this->normalizePath(realpath($path), $filter);
 
         $result = [];
 
         foreach ($dirOrFiles as $dirOrFile) {
-            $currentPath = $path . DIRECTORY_SEPARATOR . $dirOrFile;
-
-            if (!is_dir($currentPath)) {
-                $result[] = $currentPath;
+            if (is_file($dirOrFile)) {
+                $result[] = $dirOrFile;
                 continue;
             }
 
-            $result[] = $this->getRecursiveDirAndFiles($currentPath);
+            $absolutePath = $path . DIRECTORY_SEPARATOR . $dirOrFile;
+
+            $result[] = $this->getRecursiveDirAndFiles($absolutePath);
         }
 
         return Arr::flatten($result);
@@ -156,7 +85,7 @@ class Migrator
             throw new \BadMethodCallException(sprintf("The given path should be point to directory and also sub-directory of %s !", base_path('/lang')), 400);
         }
 
-        if (is_dir(realpath($path))) {
+        if (is_dir($path)) {
             $dirs = array_diff(scandir($path), ['.', '..']);
 
             if (!empty($filter)) {
@@ -170,11 +99,11 @@ class Migrator
 
     private function isSubDirectoryOfLang(string $path): bool
     {
-        if (!is_dir($path) || $path === base_path()) {
+        if ($path === base_path()) {
             return false;
         }
 
-        if (($parentDir = dirname($path)) !== base_path('/lang')) {
+        if (($parentDir = dirname($path)) !== base_path('lang')) {
             return $this->isSubDirectoryOfLang($parentDir);
         }
 
