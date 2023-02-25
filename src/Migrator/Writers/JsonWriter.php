@@ -3,10 +3,10 @@
 namespace Bugloos\LaravelLocalization\Migrator\Writers;
 
 use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
-use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\PhpReaderStrategy;
-use Bugloos\LaravelLocalization\Views\Console\Console;
+use Bugloos\LaravelLocalization\Contracts\PersistsWriteInterface;
+use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\ArrayReaderStrategy;
 
-class JsonWriter extends AbstractWriter
+class JsonWriter extends AbstractWriter implements PersistsWriteInterface
 {
     public function save(): bool
     {
@@ -18,12 +18,17 @@ class JsonWriter extends AbstractWriter
 
         try {
             foreach ($data as $category => $labelAndTranslate) {
-                $phpReader = new PhpReaderStrategy();
-                $phpReader->setCategory($category)
+                $arrayReader = new ArrayReaderStrategy();
+
+                $arrayReader->setCategory($category)
                     ->setLocale($locale)
                     ->setContent($labelAndTranslate);
 
-                (new PhpWriter($phpReader))->save();
+                foreach ((new ArrayWriter($arrayReader))->save() as $item) {
+                    if ($item !== false) {
+                        echo $item;
+                    }
+                }
             }
 
             return true;

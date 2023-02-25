@@ -20,6 +20,4 @@ abstract class AbstractWriter
     {
         self::$translator = $translator;
     }
-
-    abstract public function save(): bool;
 }

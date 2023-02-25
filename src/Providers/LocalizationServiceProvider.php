@@ -22,9 +22,7 @@ class LocalizationServiceProvider extends ServiceProvider
             return new Translator(new Loader($app['files'], $app['path.lang']), $app->getLocale());
         });
 
-        $this->app->bind('localization.migrator', function (Application $app) {
-            return new Migrator($this->app['localization']);
-        });
+        $this->app->bind('localization.migrator', static fn () => new Migrator());
 
         AbstractWriter::setTranslator($this->app['localization']);
     }
