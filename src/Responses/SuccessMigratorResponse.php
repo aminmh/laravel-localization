@@ -16,7 +16,7 @@ class SuccessMigratorResponse implements \Stringable
 
     public function __toString(): string
     {
-        return ConsoleOutput::write(sprintf(
+        return ConsoleOutput::writeLn(sprintf(
             "Label %s from category %s translate to %s with %s language.",
             $this->label,
             $this->category,
