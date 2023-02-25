@@ -5,7 +5,7 @@ namespace Bugloos\LaravelLocalization\Migrator\ReaderStrategies;
 use Bugloos\LaravelLocalization\Abstract\AbstractReader;
 use Bugloos\LaravelLocalization\Contracts\FileNameAsCategoryInterface;
 
-class PhpReaderStrategy extends AbstractReader implements FileNameAsCategoryInterface
+class ArrayReaderStrategy extends AbstractReader implements FileNameAsCategoryInterface
 {
     public function readContent(string $path): array
     {

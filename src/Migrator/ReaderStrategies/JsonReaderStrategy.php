@@ -28,11 +28,31 @@ class JsonReaderStrategy extends AbstractReader
             $result[implode('.', $keys)] = $leaf;
         }
 
-        return $result;
+        return $this->normalizeArray($result);
     }
 
     public function guessLocale(string $path): string
     {
         return pathinfo($path, PATHINFO_FILENAME);
+    }
+
+    private function normalizeArray(array $flattenArray): array
+    {
+        $data = [];
+
+        while ($payload = key($flattenArray)) {
+            $sections = explode('.', $payload);
+            $category = $sections[0];
+
+            if (!array_key_exists($category, $data)) {
+                $data[$category] = [];
+            }
+
+            $label = implode('.', array_slice($sections, 1));
+            $data[$category][$label] = reset($flattenArray);
+            unset($flattenArray[$payload]);
+        }
+
+        return $data;
     }
 }

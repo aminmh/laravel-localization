@@ -2,14 +2,15 @@
 
 namespace Bugloos\LaravelLocalization\Migrator;
 
+use Bugloos\LaravelLocalization\Contracts\LazyPersistsWriteInterface;
+use Bugloos\LaravelLocalization\Contracts\PersistsWriteInterface;
 use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\JsonReaderStrategy;
-use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\PhpReaderStrategy;
+use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\ArrayReaderStrategy;
 use Bugloos\LaravelLocalization\Migrator\Writers\JsonWriter;
-use Bugloos\LaravelLocalization\Migrator\Writers\PhpWriter;
+use Bugloos\LaravelLocalization\Migrator\Writers\ArrayWriter;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Translation;
-use Bugloos\LaravelLocalization\Translator;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -17,35 +18,23 @@ use Illuminate\Support\Facades\DB;
 class Migrator
 {
     /**
-     * @var array<PhpWriter> $strategies
+     * @var array<PersistsWriteInterface|LazyPersistsWriteInterface> $strategies
      */
     private array $strategies = [];
 
-    public function __construct(private readonly Translator $translator)
+    public function load(string $path, array $filter = []): array
     {
+        $this->initializeStrategies($path, $filter);
+        return iterator_to_array($this->migrate());
     }
 
-    public function load(string $path, array $filter = []): void
+    public function lazyLoad(string $path, array $filter = []): \Generator
     {
-        foreach ($this->getRecursiveDirAndFiles($path, $filter) as $filePath) {
-            $this->strategies[] = match (pathinfo($filePath, PATHINFO_EXTENSION)) {
-                'php' => new PhpWriter(new PhpReaderStrategy($filePath)),
-                'json' => new JsonWriter(new JsonReaderStrategy($filePath)),
-                'yaml', 'yml' => null
-            };
-        }
-
-        $this->migrate();
+        $this->initializeStrategies($path, $filter);
+        yield from $this->migrate();
     }
 
-    private function migrate(): void
-    {
-        foreach ($this->strategies as $strategy) {
-            $strategy->save();
-        }
-    }
-
-    public function refresh(): bool
+    public function purge(): bool
     {
         try {
             DB::table(config('localization.tables')[Translation::class])->truncate();
@@ -55,6 +44,28 @@ class Migrator
             return true;
         } catch (QueryException $ex) {
             return false;
+        }
+    }
+
+    private function migrate(): \Generator
+    {
+        foreach ($this->strategies as $strategy) {
+            if ($strategy instanceof LazyPersistsWriteInterface) {
+                yield from $strategy->save();
+            } else {
+                yield $strategy->save();
+            }
+        }
+    }
+
+    private function initializeStrategies(string $path, array $filter = []): void
+    {
+        foreach ($this->getRecursiveDirAndFiles($path, $filter) as $filePath) {
+            $this->strategies[] = match (pathinfo($filePath, PATHINFO_EXTENSION)) {
+                'php' => new ArrayWriter(new ArrayReaderStrategy($filePath)),
+                'json' => new JsonWriter(new JsonReaderStrategy($filePath)),
+                'yaml', 'yml' => null
+            };
         }
     }
 
@@ -80,6 +91,10 @@ class Migrator
 
     private function normalizePath(string $path, array $filter = []): array
     {
+        if (!$this->isSubDirectoryOfLang($path)) {
+            throw new \BadMethodCallException(sprintf("The given path should be point to directory and also sub-directory of %s !", base_path('/lang')), 400);
+        }
+
         if (is_dir($path)) {
             $dirs = array_diff(scandir($path), ['.', '..']);
 
@@ -90,5 +105,18 @@ class Migrator
         }
 
         return [$path];
+    }
+
+    private function isSubDirectoryOfLang(string $path): bool
+    {
+        if ($path === base_path()) {
+            return false;
+        }
+
+        if (($parentDir = dirname($path)) !== base_path('lang')) {
+            return $this->isSubDirectoryOfLang($parentDir);
+        }
+
+        return true;
     }
 }
