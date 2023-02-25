@@ -26,6 +26,6 @@ class ArrayWriter extends AbstractWriter implements LazyPersistsWriteInterface
             }
         }
 
-        yield true;
+        yield;
     }
 }
