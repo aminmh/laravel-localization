@@ -27,7 +27,5 @@ class ArrayWriter extends AbstractWriter implements LazyPersistsWriteInterface
                 yield (new FailedMigratorResponse($label, $category, $translate, $locale));
             }
         }
-
-        yield;
     }
 }
