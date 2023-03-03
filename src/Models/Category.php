@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @method static Category create(array $attributes = [])
+ * @property-read string $name
  */
 class Category extends Model
 {

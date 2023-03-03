@@ -4,6 +4,7 @@ namespace Bugloos\LaravelLocalization\Migrator\Writers;
 
 use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
 use Bugloos\LaravelLocalization\Contracts\LazyPersistsWriteInterface;
+use Bugloos\LaravelLocalization\Responses\FailedMigratorResponse;
 use Bugloos\LaravelLocalization\Responses\SuccessMigratorResponse;
 use Illuminate\Database\QueryException;
 
@@ -19,11 +20,11 @@ class ArrayWriter extends AbstractWriter implements LazyPersistsWriteInterface
             try {
                 $labelObject = static::$translator->addLabel($label, $categoryObject);
 
-                static::$translator->translate($labelObject, $translate, $locale);
+                $translated = static::$translator->translate($labelObject, $translate, $locale);
 
-                yield new SuccessMigratorResponse($label, $category, $translate, $locale);
+                yield (new SuccessMigratorResponse($translated));
             } catch (QueryException $ex) {
-                yield false;
+                yield (new FailedMigratorResponse($label, $category, $translate, $locale));
             }
         }
 
