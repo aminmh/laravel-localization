@@ -29,13 +29,23 @@ class JsonWriter extends AbstractWriter implements PersistsWriteInterface
                     ->setLocale($locale)
                     ->setContent($labelAndTranslate);
 
+//                $this->iterateResponse(
+//                    new ArrayWriter($arrayReader),
+//                    successCallback: static function (MigratorResponse $result) {
+//                        (new Console())->success($result);
+//                    },
+//                    failedCallback: static function (MigratorResponse $result) {
+//                        (new Console())->error($result);
+//                    }
+//                );
+
                 $this->skipOnFailResponse(new ArrayWriter($arrayReader), static function (MigratorResponse $result) {
                     (new Console())->success($result);
                 });
             }
 
             return true;
-        } catch (\Exception $ex) {
+        } catch (\Exception) {
             return false;
         }
     }
