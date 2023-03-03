@@ -4,10 +4,10 @@ namespace Bugloos\LaravelLocalization\Migrator\Writers;
 
 use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
 use Bugloos\LaravelLocalization\Contracts\LazyPersistsWriteInterface;
+use Bugloos\LaravelLocalization\DTO\FailedTranslationDTO;
+use Bugloos\LaravelLocalization\DTO\TranslatedDTO;
 use Bugloos\LaravelLocalization\Exceptions\LocalizationResourceException;
-use Bugloos\LaravelLocalization\Responses\FailedMigratorResponse;
-use Bugloos\LaravelLocalization\Responses\SuccessMigratorResponse;
-use Illuminate\Database\QueryException;
+use Bugloos\LaravelLocalization\Responses\MigratorResponse;
 
 class ArrayWriter extends AbstractWriter implements LazyPersistsWriteInterface
 {
@@ -23,10 +23,14 @@ class ArrayWriter extends AbstractWriter implements LazyPersistsWriteInterface
 
                 $translated = static::$translator->translate($labelObject, $translate, $locale);
 
-                yield (new SuccessMigratorResponse($translated));
+                $response = new MigratorResponse(true);
+
+                $response->setTranslatedResource(new TranslatedDTO($translated));
+
+                yield $response;
             }
         } catch (LocalizationResourceException $ex) {
-            yield (new FailedMigratorResponse($label, $category, $translate, $locale));
+
         }
 //        catch (QueryException $ex) {
 //            yield (new FailedMigratorResponse($label, $category, $translate, $locale));

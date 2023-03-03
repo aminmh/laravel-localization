@@ -2,10 +2,10 @@
 
 namespace Bugloos\LaravelLocalization\Migrator\Writers;
 
-use Bugloos\LaravelLocalization\Abstract\AbstractMigratorResponse as MigratorResponse;
 use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
 use Bugloos\LaravelLocalization\Contracts\PersistsWriteInterface;
 use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\ArrayReaderStrategy;
+use Bugloos\LaravelLocalization\Responses\MigratorResponse;
 use Bugloos\LaravelLocalization\Traits\LazyResponseTrait;
 use Bugloos\LaravelLocalization\Views\Console\Console;
 
