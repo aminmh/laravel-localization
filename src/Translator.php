@@ -73,7 +73,7 @@ class Translator extends BaseTranslator
         ]);
     }
 
-    public function translate(Label $label, string $translation, ?string $locale = null): bool
+    public function translate(Label $label, string $translation, ?string $locale = null): Translation
     {
         if ($locale) {
             $localeObject = $this->findLocale($locale)->first() ?? throw new ModelNotFoundException(sprintf('The %s not found!', $locale), 404);
@@ -219,14 +219,16 @@ class Translator extends BaseTranslator
         return $fallback ? $this->localeArray($locale) : [$locale];
     }
 
-    private function updateTranslation(Translation $oldTranslation, string $newTranslationText): bool
+    private function updateTranslation(Translation $oldTranslation, string $newTranslationText): Translation
     {
         $oldTranslation->setAttribute('text', $newTranslationText);
 
-        return $oldTranslation->save();
+        $oldTranslation->save();
+
+        return $oldTranslation;
     }
 
-    private function createNewTranslation($label, string $translation, ?Language $locale = null): bool
+    private function createNewTranslation($label, string $translation, ?Language $locale = null): Translation
     {
         $translationModel = new Translation([
             'text' => $translation,
@@ -236,7 +238,9 @@ class Translator extends BaseTranslator
 
         $translationModel->locale()->associate($locale);
 
-        return $translationModel->save();
+        $translationModel->save();
+
+        return $translationModel;
     }
 
     private function findLocale(?string $locale = null, ?bool $active = null): Builder

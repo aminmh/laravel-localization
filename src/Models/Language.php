@@ -12,9 +12,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property string $locale
- * @property bool $active
- * @property string $name
+ * @property-read  string $locale
+ * @property-read  bool $active
+ * @property-read  string $name
  */
 class Language extends Model
 {
