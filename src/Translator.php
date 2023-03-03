@@ -2,9 +2,11 @@
 
 namespace Bugloos\LaravelLocalization;
 
+use Bugloos\LaravelLocalization\DTO\FailedTranslationDTO;
 use Bugloos\LaravelLocalization\Enums\ResourceExceptionMessages;
 use Bugloos\LaravelLocalization\Enums\ResourceExceptionMessages as ExceptionMessages;
 use Bugloos\LaravelLocalization\Exceptions\LocalizationResourceException;
+use Bugloos\LaravelLocalization\Exceptions\TranslationFailureException;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Language;
@@ -99,7 +101,12 @@ class Translator extends BaseTranslator
         try {
             return $this->createNewTranslation($label, $translation, $localeObject);
         } catch (QueryException $ex) {
-            throw new LocalizationResourceException(ExceptionMessages::FAILED_TRANSLATION, 400, $ex, $label->key, $label->category->name, $locale);
+            throw new TranslationFailureException(
+                new FailedTranslationDTO($label->key, $label->category->name, $translation, $locale),
+                $ex
+            );
+
+//            throw new LocalizationResourceException(ExceptionMessages::FAILED_TRANSLATION, 400, $ex, $label->key, $label->category->name, $locale);
         }
     }
 

@@ -3,7 +3,6 @@
 namespace Bugloos\LaravelLocalization\Exceptions;
 
 use Bugloos\LaravelLocalization\Enums\ResourceExceptionMessages;
-use Illuminate\Database\QueryException;
 use Throwable;
 
 class LocalizationResourceException extends \RuntimeException
