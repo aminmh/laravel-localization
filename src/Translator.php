@@ -2,6 +2,9 @@
 
 namespace Bugloos\LaravelLocalization;
 
+use Bugloos\LaravelLocalization\Enums\ResourceExceptionMessages;
+use Bugloos\LaravelLocalization\Enums\ResourceExceptionMessages as ExceptionMessages;
+use Bugloos\LaravelLocalization\Exceptions\LocalizationResourceException;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Language;
@@ -22,8 +25,7 @@ class Translator extends BaseTranslator
     public function __construct(
         Loader $loader,
         string $locale
-    )
-    {
+    ) {
         parent::__construct($loader, $locale);
         $this->namespaceResolver = new NamespacedItemResolver();
     }
@@ -52,25 +54,34 @@ class Translator extends BaseTranslator
     public function addLabel($key, $category): Label
     {
         if (!$category instanceof Category) {
-            $category = Category::findBy($category) ?? throw new ModelNotFoundException(sprintf("The category %s not found!", $category), 404);
+            $category = Category::findBy($category)
+                ?? throw new LocalizationResourceException(ExceptionMessages::NOT_FOUND, code: 404, resources: $category);
         }
 
-        $label = new Label([
-            'key' => $key,
-        ]);
+        try {
+            $label = new Label([
+                'key' => $key,
+            ]);
 
-        $label->category()->associate($category);
+            $label->category()->associate($category);
 
-        $label->save();
+            $label->save();
 
-        return $label;
+            return $label;
+        } catch (QueryException $ex) {
+            throw new LocalizationResourceException(ExceptionMessages::ADD_FAILED, 400, $ex, $key);
+        }
     }
 
     public function addCategory(string $name): Category
     {
-        return Category::create([
-            'name' => $name,
-        ]);
+        try {
+            return Category::create([
+                'name' => $name,
+            ]);
+        } catch (QueryException $ex) {
+            throw new LocalizationResourceException(ExceptionMessages::ADD_FAILED, 400, $ex, $name);
+        }
     }
 
     public function translate(Label $label, string $translation, ?string $locale = null): Translation
@@ -85,7 +96,11 @@ class Translator extends BaseTranslator
             return $this->updateTranslation($oldTranslation, $translation);
         }
 
-        return $this->createNewTranslation($label, $translation, $localeObject);
+        try {
+            return $this->createNewTranslation($label, $translation, $localeObject);
+        } catch (QueryException $ex) {
+            throw new LocalizationResourceException(ExceptionMessages::FAILED_TRANSLATION, 400, $ex, $label->key, $label->category->name, $locale);
+        }
     }
 
     public function bulkTranslate(Label $label, array $translations): bool
@@ -108,14 +123,16 @@ class Translator extends BaseTranslator
 
                 $translationObject->locale()->associate($locales[$locale]);
                 $translationObject->label()->associate($label);
-                $newTranslationBag[] = Arr::except($translationObject->toArray(), ['label', 'locale']);
+                // TODO: Test it
+                $newTranslationBag[] = array_intersect_key($translationObject->toArray(), array_flip(['label', 'locale']));
+//                $newTranslationBag[] = Arr::except($translationObject->toArray(), ['label', 'locale']);
             }
         }
 
         try {
             return Translation::query()->insert($newTranslationBag);
         } catch (QueryException $ex) {
-            // TODO: Throw custom exception
+            throw new LocalizationResourceException(ExceptionMessages::BULK_TRANSLATION, 400, previous: $ex);
         }
     }
 
