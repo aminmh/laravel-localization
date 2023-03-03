@@ -7,6 +7,17 @@ use Bugloos\LaravelLocalization\Migrator\Writers\ArrayWriter;
 
 trait LazyResponseTrait
 {
+    public function iterateResponse(ArrayWriter $writer, callable $successCallback, callable $failedCallback)
+    {
+        foreach ($writer->save() as $result) {
+            if ($result->isStatusOk()) {
+                $successCallback($result);
+            } else {
+                $failedCallback($result);
+            }
+        }
+    }
+
     /**
      * @param ArrayWriter $writer
      * @param callable(MigratorResponse):void $callback
