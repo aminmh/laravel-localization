@@ -3,6 +3,7 @@
 namespace Bugloos\LaravelLocalization\Commands;
 
 use Bugloos\LaravelLocalization\Facades\MigratorFacade;
+use Bugloos\LaravelLocalization\Responses\MigratorResponse;
 use Illuminate\Console\Command;
 use Illuminate\Database\QueryException;
 
@@ -46,8 +47,9 @@ class Migrate extends Command
 
     private function lazyHandle(string $path): int
     {
+        /** @var MigratorResponse $loaded */
         foreach (MigratorFacade::lazyLoad($path) as $loaded) {
-            echo $loaded;
+            $loaded->isStatusOk() ? $this->info($loaded) : $this->error($loaded);
         }
 
         return Command::SUCCESS;
