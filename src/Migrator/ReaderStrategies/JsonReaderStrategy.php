@@ -3,32 +3,21 @@
 namespace Bugloos\LaravelLocalization\Migrator\ReaderStrategies;
 
 use Bugloos\LaravelLocalization\Abstract\AbstractReader;
+use Bugloos\LaravelLocalization\Traits\InteractWithNestedArrayTrait;
 
 class JsonReaderStrategy extends AbstractReader
 {
+    use InteractWithNestedArrayTrait;
+
     public function readContent(string $path): array
     {
         try {
             $decodedJson = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $ex) {
+        } catch (\JsonException) {
             return [];
         }
 
-        $recursiveIterator = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($decodedJson));
-
-        $result = [];
-
-        foreach ($recursiveIterator as $leaf) {
-            $keys = [];
-
-            foreach (range(0, $recursiveIterator->getDepth()) as $depth) {
-                $keys[] = $recursiveIterator->getSubIterator($depth)?->key();
-            }
-
-            $result[implode('.', $keys)] = $leaf;
-        }
-
-        return $this->normalizeArray($result);
+        return $this->normalizeArray($this->convertNested2FlatArray($decodedJson));
     }
 
     public function guessLocale(string $path): string

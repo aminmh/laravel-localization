@@ -2,9 +2,11 @@
 
 namespace Bugloos\LaravelLocalization;
 
+use Bugloos\LaravelLocalization\DTO\FailedTranslationDTO;
 use Bugloos\LaravelLocalization\Enums\ResourceExceptionMessages;
 use Bugloos\LaravelLocalization\Enums\ResourceExceptionMessages as ExceptionMessages;
 use Bugloos\LaravelLocalization\Exceptions\LocalizationResourceException;
+use Bugloos\LaravelLocalization\Exceptions\TranslationFailureException;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Language;
@@ -86,20 +88,25 @@ class Translator extends BaseTranslator
 
     public function translate(Label $label, string $translation, ?string $locale = null): Translation
     {
-        if ($locale) {
-            $localeObject = $this->findLocale($locale)->first() ?? throw new ModelNotFoundException(sprintf('The %s not found!', $locale), 404);
-        } else {
-            $localeObject = $this->findLocale($this->getLocale())->first();
-        }
-
-        if (false !== ($oldTranslation = $this->hasTranslationWithLocale($label, $localeObject))) {
-            return $this->updateTranslation($oldTranslation, $translation);
-        }
-
         try {
+            if ($locale) {
+                $localeObject = $this->findLocale($locale)->first() ?? throw new ModelNotFoundException(sprintf(ExceptionMessages::NOT_FOUND->value, $locale), 404);
+            } else {
+                $localeObject = $this->findLocale($this->getLocale())->first();
+            }
+
+            if (false !== ($oldTranslation = $this->hasTranslationWithLocale($label, $localeObject))) {
+                return $this->updateTranslation($oldTranslation, $translation);
+            }
+
             return $this->createNewTranslation($label, $translation, $localeObject);
         } catch (QueryException $ex) {
-            throw new LocalizationResourceException(ExceptionMessages::FAILED_TRANSLATION, 400, $ex, $label->key, $label->category->name, $locale);
+            throw new TranslationFailureException(
+                new FailedTranslationDTO($label->key, $label->category->name, $translation, $locale),
+                $ex
+            );
+        } catch (ModelNotFoundException $ex) {
+            throw new LocalizationResourceException($ex->getMessage(), 400, $ex, $locale);
         }
     }
 

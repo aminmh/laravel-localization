@@ -2,8 +2,8 @@
 
 namespace Bugloos\LaravelLocalization\Traits;
 
-use Bugloos\LaravelLocalization\Abstract\AbstractMigratorResponse as MigratorResponse;
 use Bugloos\LaravelLocalization\Migrator\Writers\ArrayWriter;
+use Bugloos\LaravelLocalization\Responses\MigratorResponse as MigratorResponse;
 
 trait LazyResponseTrait
 {
