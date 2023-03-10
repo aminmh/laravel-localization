@@ -38,4 +38,25 @@ trait InteractWithNestedArrayTrait
             unset($data[$key]);
         }
     }
+
+    protected function convertFlat2NestedArray(array &$data): void
+    {
+        foreach ($data as $key => &$value) {
+            if (is_array($value)) {
+                $this->convertFlat2NestedArray($value);
+            }
+
+            if (str_contains($key, '.')) {
+                $sections = explode('.', $key);
+                $category = $sections[0];
+                $child = [implode('.', array_slice($sections, 1)) => $value];
+                if (isset($data[$category])) {
+                    $child = array_merge($data[$category], [implode('.', array_slice($sections, 1)) => $value]);
+                }
+                $data[$category] = $child;
+                unset($data[$key]);
+                $this->convertFlat2NestedArray($data);
+            }
+        }
+    }
 }
