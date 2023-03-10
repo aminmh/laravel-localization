@@ -14,6 +14,9 @@ class Extractor
         $extractor->write(storage_path('/app/public/'));
     }
 
+    /**
+     * @throws \Exception
+     */
     public static function lazyExtract(ExtractorType $extractor): void
     {
         $extractor->lazyWrite(storage_path('/app/public/'));

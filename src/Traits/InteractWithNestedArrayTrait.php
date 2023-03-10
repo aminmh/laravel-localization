@@ -59,4 +59,15 @@ trait InteractWithNestedArrayTrait
             }
         }
     }
+
+    private function mergeAllItemsTogether(array $data): array
+    {
+        $result = [];
+
+        foreach ($data as $item) {
+            $result = [...$result, ...$item];
+        }
+
+        return $result;
+    }
 }

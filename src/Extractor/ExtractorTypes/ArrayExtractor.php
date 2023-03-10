@@ -8,10 +8,8 @@ use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Traits\InteractWithNestedArrayTrait;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Enumerable;
-use IteratorAggregate;
-use Traversable;
 
-class ArrayExtractor extends AbstractExtractor implements IteratorAggregate, ExporterDataTransformerInterface
+class ArrayExtractor extends AbstractExtractor implements ExporterDataTransformerInterface
 {
     use InteractWithNestedArrayTrait;
 
@@ -25,9 +23,9 @@ class ArrayExtractor extends AbstractExtractor implements IteratorAggregate, Exp
     public function transform(mixed $data): array
     {
         if ($data instanceof Enumerable) {
-            $labels = $data->map(static function (Category $item) {
-                return $item->labels()->get()->pluck('translation.text', 'key')->toArray();
-            })->toArray();
+            $labels = $data->map(
+                static fn (Category $item) => $item->labels()->get()->pluck('translation.text', 'key')->toArray()
+            )->toArray();
         } else {
             $labels = Arr::pluck($data->labels, 'translation.text', 'key');
         }
@@ -37,14 +35,14 @@ class ArrayExtractor extends AbstractExtractor implements IteratorAggregate, Exp
         return $labels;
     }
 
-    public function getIterator(): Traversable
-    {
-        if ($this->category === '*') {
-            foreach ($this->sourceQuery()->cursor() as $item) {
-                yield $item;
-            }
-        }
-    }
+//    public function getIterator(): Traversable
+//    {
+//        if ($this->category === '*') {
+//            foreach ($this->sourceQuery()->cursor() as $item) {
+//                yield $item;
+//            }
+//        }
+//    }
 
     protected function fileName(): string
     {
