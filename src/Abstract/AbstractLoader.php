@@ -4,7 +4,7 @@ namespace Bugloos\LaravelLocalization\Abstract;
 
 use Bugloos\LaravelLocalization\Contracts\FileNameAsCategoryInterface;
 
-abstract class AbstractReader
+abstract class AbstractLoader
 {
     protected string $path;
 

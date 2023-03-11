@@ -14,7 +14,7 @@ class Migrate extends Command
      *
      * @var string
      */
-    protected $signature = 'localization:migrate {path} {--lazy}';
+    protected $signature = 'localization:migrate {path}';
 
     /**
      * The console command description.
@@ -33,25 +33,11 @@ class Migrate extends Command
         try {
             $path = $this->argument('path');
 
-            if ($this->option('lazy') || false) {
-                return $this->lazyHandle($path);
-            }
-
             MigratorFacade::load($path);
 
             return Command::SUCCESS;
         } catch (QueryException $ex) {
             $this->error($ex->getMessage());
         }
-    }
-
-    private function lazyHandle(string $path): int
-    {
-        /** @var MigratorResponse $loaded */
-        foreach (MigratorFacade::lazyLoad($path) as $loaded) {
-            $loaded->isStatusOk() ? $this->info($loaded) : $this->error($loaded);
-        }
-
-        return Command::SUCCESS;
     }
 }

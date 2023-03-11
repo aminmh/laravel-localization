@@ -9,9 +9,11 @@ abstract class AbstractWriter
     protected static Translator $translator;
 
     public function __construct(
-        protected AbstractReader $reader
+        protected AbstractLoader $loader
     ) {
     }
+
+    abstract public function migrate(): void;
 
     /**
      * @param Translator $translator

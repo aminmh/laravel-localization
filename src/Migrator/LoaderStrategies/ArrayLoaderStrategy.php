@@ -1,12 +1,12 @@
 <?php
 
-namespace Bugloos\LaravelLocalization\Migrator\ReaderStrategies;
+namespace Bugloos\LaravelLocalization\Migrator\LoaderStrategies;
 
-use Bugloos\LaravelLocalization\Abstract\AbstractReader;
+use Bugloos\LaravelLocalization\Abstract\AbstractLoader;
 use Bugloos\LaravelLocalization\Contracts\FileNameAsCategoryInterface;
 use Bugloos\LaravelLocalization\Traits\InteractWithNestedArrayTrait;
 
-class ArrayReaderStrategy extends AbstractReader implements FileNameAsCategoryInterface
+class ArrayLoaderStrategy extends AbstractLoader implements FileNameAsCategoryInterface
 {
     use InteractWithNestedArrayTrait;
 
