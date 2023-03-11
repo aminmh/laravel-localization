@@ -3,6 +3,7 @@
 namespace Bugloos\LaravelLocalization\Migrator\MigratorStrategies;
 
 use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
+use Bugloos\LaravelLocalization\Exceptions\TranslationFailureException;
 
 class ArrayMigrator extends AbstractWriter
 {
@@ -15,9 +16,14 @@ class ArrayMigrator extends AbstractWriter
         $data = $this->loader->getContent();
 
         foreach ($data as $label => $translate) {
-            $labelObject = static::$translator->addLabel($label, $categoryObject);
+            try {
+                $labelObject = static::$translator->addLabel($label, $categoryObject);
 
-            static::$translator->translate($labelObject, $translate, $locale);
+                static::$translator->translate($labelObject, $translate, $locale);
+            } catch (TranslationFailureException $ex) {
+                echo $ex->getMessage();
+                continue;
+            }
         }
     }
 }
