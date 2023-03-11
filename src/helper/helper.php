@@ -1,15 +1,12 @@
 <?php
 
-use Bugloos\LaravelLocalization\Loader;
-use Bugloos\LaravelLocalization\Translator;
-
-if (! function_exists('trans_get')) {
+if (!function_exists('trans_get')) {
+    /**
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     */
     function translate(string $key, array $replace = [], ?string $locale = null): string
     {
-        $loader = new Loader(app('files'), app('path.lang'));
-
-        return
-            (new Translator($loader, app()->getLocale()))
-                ->get($key, $replace, $locale);
+        return (app()->get('localization'))->get($key, $replace, $locale);
     }
 }

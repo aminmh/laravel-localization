@@ -17,7 +17,7 @@ class JsonLoaderStrategy extends AbstractLoader
             return [];
         }
 
-        return $this->normalizeArray($this->convertNested2FlatArray($decodedJson));
+        return $this->extract($this->convertNested2FlatArray($decodedJson));
     }
 
     public function guessLocale(string $path): string
@@ -25,7 +25,7 @@ class JsonLoaderStrategy extends AbstractLoader
         return pathinfo($path, PATHINFO_FILENAME);
     }
 
-    private function normalizeArray(array $flattenArray): array
+    private function extract(array $flattenArray): array
     {
         $data = [];
 
