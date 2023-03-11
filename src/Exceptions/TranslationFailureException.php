@@ -10,14 +10,4 @@ class TranslationFailureException extends \RuntimeException
     {
         parent::__construct((string)$failedTranslate, 400, $previous);
     }
-
-    public function resourceToArray(): array
-    {
-        return [
-            'label' => $this->failedTranslate->label,
-            'category' => $this->failedTranslate->category,
-            'translate' => $this->failedTranslate->translate,
-            'locale' => $this->failedTranslate->locale,
-        ];
-    }
 }
