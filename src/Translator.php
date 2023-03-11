@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\NamespacedItemResolver;
 use Illuminate\Translation\Translator as BaseTranslator;
@@ -42,7 +43,7 @@ class Translator extends BaseTranslator
         try {
             $line = $this->loaded['*']['*'][$locale][$key];
         } catch (\Exception) {
-            $line = data_get($this->loaded['*']['*'][$locale], $key);
+            $line = Arr::get($this->loaded['*']['*'][$locale], $key);
         }
 
         // If we can't find a translation for the JSON key, we will attempt to translate it
