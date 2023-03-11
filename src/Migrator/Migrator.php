@@ -30,9 +30,11 @@ class Migrator
     public function purge(): bool
     {
         try {
-            DB::table(config('localization.tables')[Translation::class])->truncate();
-            DB::table(config('localization.tables')[Label::class])->truncate();
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
             DB::table(config('localization.tables')[Category::class])->truncate();
+            DB::table(config('localization.tables')[Label::class])->truncate();
+            DB::table(config('localization.tables')[Translation::class])->truncate();
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             return true;
         } catch (QueryException $ex) {
