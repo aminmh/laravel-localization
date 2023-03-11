@@ -18,7 +18,7 @@ class LocalizationServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind('localization', function (Application $app) {
+        $this->app->singleton('localization', function ($app) {
             return new Translator(new Loader($app['files'], $app['path.lang']), $app->getLocale());
         });
 
@@ -43,15 +43,5 @@ class LocalizationServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
         $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
-    }
-
-    private function getAppLangPath()
-    {
-        return $this->app['path.lang'];
-    }
-
-    private function getFileSystem()
-    {
-        return $this->app['files'];
     }
 }

@@ -13,7 +13,7 @@ trait InteractWithNestedArrayTrait
         }, ARRAY_FILTER_USE_BOTH);
     }
 
-    public function convertNested2FlatArray(array $nestedData)
+    public function convertNested2FlatArray(array $nestedData): array
     {
         $recursiveIterator = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($nestedData));
 
