@@ -1,11 +1,11 @@
 <?php
 
-namespace Bugloos\LaravelLocalization\Migrator\ReaderStrategies;
+namespace Bugloos\LaravelLocalization\Migrator\LoaderStrategies;
 
-use Bugloos\LaravelLocalization\Abstract\AbstractReader;
+use Bugloos\LaravelLocalization\Abstract\AbstractLoader;
 use Bugloos\LaravelLocalization\Traits\InteractWithNestedArrayTrait;
 
-class JsonReaderStrategy extends AbstractReader
+class JsonLoaderStrategy extends AbstractLoader
 {
     use InteractWithNestedArrayTrait;
 

@@ -2,12 +2,11 @@
 
 namespace Bugloos\LaravelLocalization\Migrator;
 
-use Bugloos\LaravelLocalization\Contracts\LazyPersistsWriteInterface;
-use Bugloos\LaravelLocalization\Contracts\PersistsWriteInterface;
-use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\JsonReaderStrategy;
-use Bugloos\LaravelLocalization\Migrator\ReaderStrategies\ArrayReaderStrategy;
-use Bugloos\LaravelLocalization\Migrator\Writers\JsonWriter;
-use Bugloos\LaravelLocalization\Migrator\Writers\ArrayWriter;
+use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
+use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\JsonLoaderStrategy;
+use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\ArrayLoaderStrategy;
+use Bugloos\LaravelLocalization\Migrator\MigratorStrategies\JsonMigrator;
+use Bugloos\LaravelLocalization\Migrator\MigratorStrategies\ArrayMigrator;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Translation;
@@ -18,20 +17,14 @@ use Illuminate\Support\Facades\DB;
 class Migrator
 {
     /**
-     * @var array<PersistsWriteInterface|LazyPersistsWriteInterface> $strategies
+     * @var array<AbstractWriter> $strategies
      */
     private array $strategies = [];
 
-    public function load(string $path, array $filter = []): array
+    public function load(string $path, array $filter = []): void
     {
         $this->initializeStrategies($path, $filter);
-        return iterator_to_array($this->migrate());
-    }
-
-    public function lazyLoad(string $path, array $filter = []): \Generator
-    {
-        $this->initializeStrategies($path, $filter);
-        yield from $this->migrate();
+        $this->migrate();
     }
 
     public function purge(): bool
@@ -47,14 +40,10 @@ class Migrator
         }
     }
 
-    private function migrate(): \Generator
+    private function migrate(): void
     {
         foreach ($this->strategies as $strategy) {
-            if ($strategy instanceof LazyPersistsWriteInterface) {
-                yield from $strategy->save();
-            } else {
-                yield $strategy->save();
-            }
+            $strategy->migrate();
         }
     }
 
@@ -62,8 +51,8 @@ class Migrator
     {
         foreach ($this->getRecursiveDirAndFiles($path, $filter) as $filePath) {
             $this->strategies[] = match (pathinfo($filePath, PATHINFO_EXTENSION)) {
-                'php' => new ArrayWriter(new ArrayReaderStrategy($filePath)),
-                'json' => new JsonWriter(new JsonReaderStrategy($filePath)),
+                'php' => new ArrayMigrator(new ArrayLoaderStrategy($filePath)),
+                'json' => new JsonMigrator(new JsonLoaderStrategy($filePath)),
                 'yaml', 'yml' => null
             };
         }
