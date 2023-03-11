@@ -9,6 +9,23 @@ return [
         'mime_type' => 'png',
     ],
 
+    'extract' => [
+        'export_path' => storage_path('app/public'),
+        'extractors' => [
+            'php' => \Bugloos\LaravelLocalization\Extractor\ExtractorTypes\ArrayExtractor::class,
+            'json' => \Bugloos\LaravelLocalization\Extractor\ExtractorTypes\JsonExtractor::class
+        ]
+    ],
+
+    'migrate' => [
+        'migrators' => [
+            'yaml' => [
+//                'migrator' => 'some class',
+//                'loader' => 'some class'
+            ]
+        ]
+    ],
+
 
     'tables' => [
         \Bugloos\LaravelLocalization\Models\Label::class => 'labels',
