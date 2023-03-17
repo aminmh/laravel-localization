@@ -2,7 +2,7 @@
 
 namespace Bugloos\LaravelLocalization\Migrator;
 
-use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
+use Bugloos\LaravelLocalization\Abstract\AbstractMigrator;
 use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\ArrayLoaderStrategy;
 use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\JsonLoaderStrategy;
 use Bugloos\LaravelLocalization\Migrator\MigratorStrategies\ArrayMigrator;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 class Migrator
 {
     /**
-     * @var array<AbstractWriter> $strategies
+     * @var array<AbstractMigrator> $strategies
      */
     private array $strategies = [];
 

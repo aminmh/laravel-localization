@@ -4,7 +4,7 @@ namespace Bugloos\LaravelLocalization\Abstract;
 
 use Bugloos\LaravelLocalization\Translator;
 
-abstract class AbstractWriter
+abstract class AbstractMigrator
 {
     protected static Translator $translator;
 
