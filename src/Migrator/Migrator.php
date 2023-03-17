@@ -2,11 +2,11 @@
 
 namespace Bugloos\LaravelLocalization\Migrator;
 
-use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
-use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\JsonLoaderStrategy;
+use Bugloos\LaravelLocalization\Abstract\AbstractMigrator;
 use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\ArrayLoaderStrategy;
-use Bugloos\LaravelLocalization\Migrator\MigratorStrategies\JsonMigrator;
+use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\JsonLoaderStrategy;
 use Bugloos\LaravelLocalization\Migrator\MigratorStrategies\ArrayMigrator;
+use Bugloos\LaravelLocalization\Migrator\MigratorStrategies\JsonMigrator;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Models\Label;
 use Bugloos\LaravelLocalization\Models\Translation;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 class Migrator
 {
     /**
-     * @var array<AbstractWriter> $strategies
+     * @var array<AbstractMigrator> $strategies
      */
     private array $strategies = [];
 
@@ -51,12 +51,32 @@ class Migrator
 
     private function initializeStrategies(string $path, array $filter = []): void
     {
-        foreach ($this->getRecursiveDirAndFiles($path, $filter) as $filePath) {
+        $files = $this->getRecursiveDirAndFiles($path, $filter);
+
+        $customStrategies = array_filter($files, static function ($filePath) {
+            return !in_array(pathinfo($filePath, PATHINFO_EXTENSION), ['php', 'json']);
+        });
+
+        $this->initializeCustomStrategies($customStrategies);
+
+        foreach ($files as $filePath) {
             $this->strategies[] = match (pathinfo($filePath, PATHINFO_EXTENSION)) {
                 'php' => new ArrayMigrator(new ArrayLoaderStrategy($filePath)),
                 'json' => new JsonMigrator(new JsonLoaderStrategy($filePath)),
                 'yaml', 'yml' => null
             };
+        }
+    }
+
+    private function initializeCustomStrategies(array $files): void
+    {
+        $customMigrators = config('localization.migrate.migrators');
+
+        foreach ($files as $file) {
+            if (array_key_exists($mimeType = pathinfo($file, PATHINFO_EXTENSION), $customMigrators)) {
+                $loader = $customMigrators[$mimeType]['loader'];
+                $this->strategies[] = new $customMigrators[$mimeType]['migrator'](new $loader($file));
+            }
         }
     }
 

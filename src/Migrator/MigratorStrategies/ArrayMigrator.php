@@ -2,10 +2,10 @@
 
 namespace Bugloos\LaravelLocalization\Migrator\MigratorStrategies;
 
-use Bugloos\LaravelLocalization\Abstract\AbstractWriter;
+use Bugloos\LaravelLocalization\Abstract\AbstractMigrator as BaseMigrator;
 use Bugloos\LaravelLocalization\Exceptions\TranslationFailureException;
 
-class ArrayMigrator extends AbstractWriter
+class ArrayMigrator extends BaseMigrator
 {
     public function migrate(): void
     {

@@ -22,10 +22,10 @@ class Language extends Model
     use ConfiguredTableName;
 
     public const DEFAULT_FLAG_PATH = __DIR__ . '/../resources/assets/flags';
+
     public $timestamps = false;
 
     protected $table = 'languages';
-
     protected $fillable = ['locale', 'active', 'name'];
 
     protected $hidden = ['active'];
