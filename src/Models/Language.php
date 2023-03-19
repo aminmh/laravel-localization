@@ -3,6 +3,7 @@
 namespace Bugloos\LaravelLocalization\Models;
 
 use Bugloos\LaravelLocalization\Controller\LanguageController;
+use Bugloos\LaravelLocalization\Database\Factories\LanguageFactory;
 use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -45,6 +46,11 @@ class Language extends Model
         }
 
         return $query->where('locale', $locale)->get();
+    }
+
+    protected static function newFactory(): LanguageFactory
+    {
+        return LanguageFactory::new();
     }
 
     public function translations(): HasMany
