@@ -16,7 +16,7 @@ class LanguageSeeder extends Seeder
         DB::table($this->getTable(Language::class))->insert($this->languages());
     }
 
-    private function languages()
+    final public static function languages(): array
     {
         return [
             ['locale' => 'af', 'name' => 'Afrikaans'],

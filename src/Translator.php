@@ -175,15 +175,16 @@ class Translator extends BaseTranslator
         if ($isLocaleActive) {
             return Category::with('labels')->get()
                 ->map(static function (Category $category) use ($locale) {
-                    return [
-                        $category->getAttribute('name') => $category->labels()
+                    return $category->setAttribute(
+                        'translated_labels',
+                        $category->labels()
                             ->with('translation', function (Relation $query) use ($locale) {
                                 $query->whereRelation('locale', 'locale', $locale);
                             })
                             ->lazy(100)
                             ->pluck('translation.text', 'key')
-                            ->all(),
-                    ];
+                            ->all()
+                    );
                 });
         }
 
@@ -237,17 +238,23 @@ class Translator extends BaseTranslator
         return ($path .= "/{$locale}.{$mimeType}");
     }
 
-    private function notTranslatedInLocale(string|Language $locale)
+    private function notTranslatedInLocale(string|Language $locale): Language
     {
         if (is_string($locale)) {
-            $locale = $this->findLocale($locale, true);
+            $locale = $this->findLocale($locale, true)->first();
         }
 
         return $locale->setAttribute(
             'labels',
             Label::query()->whereHas('notTranslated', static function (Builder $query) use ($locale) {
                 $query->whereRelation('locale', 'locale', $locale->getAttribute('locale'));
-            })->get()
+            })
+                ->union(
+                    Label::query()->whereDoesntHave('translations', static function (Builder $query) use ($locale) {
+                        $query->whereRelation('locale', 'locale', $locale->getAttribute('locale'));
+                    })
+                )
+                ->get()
         );
     }
 
@@ -258,7 +265,9 @@ class Translator extends BaseTranslator
         }
 
         return $category->labels()
-            ->whereHas('notTranslated')->get();
+            ->whereHas('notTranslated')
+            ->union($category->labels()->getQuery()->whereDoesntHave('translations'))
+            ->get();
     }
 
     protected function getLocaleOrFallback($locale, bool $fallback): array
