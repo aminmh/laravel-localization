@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 /**
  * @property-read string $key
  * @property-read Category $category
+ * @method static LabelFactory factory($count = null, $state = [])
  */
 class Label extends Model
 {
