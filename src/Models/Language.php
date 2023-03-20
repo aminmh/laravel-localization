@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property-read  string $locale
  * @property-read  bool $active
  * @property-read  string $name
+ * @method static LanguageFactory factory($count = null, $state = [])
  */
 class Language extends Model
 {

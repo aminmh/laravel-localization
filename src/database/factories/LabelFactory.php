@@ -3,6 +3,7 @@
 namespace Bugloos\LaravelLocalization\database\factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Factories\Sequence;
 
 class LabelFactory extends Factory
 {
@@ -15,29 +16,20 @@ class LabelFactory extends Factory
         ];
     }
 
-    public static function createWithRealNames(int $count, array $attributes = [])
+    public function genuine(): static
     {
-        if ($count <= count(static::realNames())) {
-            $records = [];
-
-            $labels = static::realNames();
-
-            shuffle($labels);
-
-            $labels = array_slice($labels, 0, $count);
-
-            for ($i = 0; $i < $count; $i++) {
-                $records[] = array_merge(['key' => $labels[$i]], $attributes);
-            }
-
-            return (new static())
-                ->state([])
-                ->configure()
-                ->createMany($records);
+        if ($this->count === 1) {
+            return $this->one();
         }
+
+        return $this->sequence(function (Sequence $sequence) {
+            return [
+                'key' => static::labels()[$sequence->index + $this->faker->numberBetween($sequence->index, count(static::labels()) - 1)]
+            ];
+        });
     }
 
-    private static function realNames()
+    private static function labels(): array
     {
         return [
             'car',
@@ -67,5 +59,22 @@ class LabelFactory extends Factory
             'dog',
             'engineer',
         ];
+    }
+
+    private function one(): static
+    {
+        $labels = static::labels();
+
+        shuffle($labels);
+
+        $index = $this->faker->numberBetween(0, count($labels));
+
+        $label = $labels[$index];
+
+        return $this->state(function () use ($label) {
+            return [
+                'key' => $label
+            ];
+        });
     }
 }

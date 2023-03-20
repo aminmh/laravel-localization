@@ -5,12 +5,12 @@ use Bugloos\LaravelLocalization\Models;
 use Pest\Laravel as Assert;
 
 beforeEach(function () {
-    $this->locale = Models\Language::factory()->createOne();
+    $this->locale = Models\Language::factory()->random()->createOne();
     $this->locale->update(['active' => 1]);
 });
 
 dataset('translate', [fn () => \Pest\Faker\faker()->sentence()]);
-dataset('locale', [fn () => 'en']);
+dataset('locale', [fn () => Models\Language::factory()->createOne()]);
 
 it('make new category', function () {
     $category = Models\Category::factory()->createOne();
@@ -25,7 +25,7 @@ it('make new category', function () {
 it('make new label', function () {
     $category = Models\Category::factory()->createOne();
 
-    $fakeLabel = Models\Label::factory()->makeOne();
+    $fakeLabel = Models\Label::factory()->genuine()->makeOne();
 
     $label = Localization::addLabel($fakeLabel->getAttribute('key'), $category);
 
@@ -41,7 +41,7 @@ it('make new label', function () {
 });
 
 it('translate a label', function () {
-    $label = Models\Label::factory()->createOne();
+    $label = Models\Label::factory()->genuine()->createOne();
 
     \PHPUnit\Framework\assertNotNull($label);
 
@@ -83,10 +83,10 @@ it('get translated labels', function ($locale) {
     \PHPUnit\Framework\assertContains($labels[1]->getAttribute('key'), $translatedLabels);
 })->with('locale');
 
-it('get un-translated labels in specific locale', function ($translate, $locale) {
+it('get un-translated labels in specific locale', function ($translate, Models\Language $locale) {
     $labels = Models\Label::factory()->count(2)->create();
 
-    Localization::translate($labels[0], $translate, $locale);
+    Localization::translate($labels[0], $translate, $locale->locale);
 
     $notTranslated = Localization::notTranslated($locale);
 
@@ -101,14 +101,14 @@ it('get un-translated labels in specific locale', function ($translate, $locale)
     ->with('translate')
     ->with('locale');
 
-it('get un-translated labels with specific category', function ($translate, $locale) {
+it('get un-translated labels with specific category', function ($translate, Models\Language $locale) {
     $category = Models\Category::factory()->createOne();
 
-    $labels = Models\Label::factory()->for($category)->count(2)->create();
+    $labels = Models\Label::factory()->count(2)->genuine()->for($category)->create();
 
     expect($labels)->toBeCollection()->not->toBeEmpty();
 
-    Localization::translate($labels[0], $translate, $locale);
+    Localization::translate($labels[0], $translate, $locale->locale);
 
     Assert\assertDatabaseHas('translations', [
         'label_id' => $labels[0]->getKey()
@@ -124,3 +124,28 @@ it('get un-translated labels with specific category', function ($translate, $loc
 })
     ->with('translate')
     ->with('locale');
+
+it('translates a label into multiple languages', function () {
+    $languages = Models\Language::factory()->count(2)->random()->create();
+
+    /** @var Models\Label $label */
+    $label = Models\Label::factory()->genuine()->createOne();
+
+    expect($languages)->toBeCollection()->not->toBeEmpty();
+
+    $languages = $languages->each(static fn (Models\Language $language) => $language->update(['active' => 1]))->sortBy('id');
+
+    $translations = $languages->flatMap(static fn (Models\Language $language) => [$language->locale => fake()->sentence()])->all();
+
+    $result = Localization::bulkTranslate($label, $translations);
+
+    \PHPUnit\Framework\assertTrue($result);
+
+    $translated = $label->translations()->whereIn('language_id', $languages->pluck('id')->all())->get()->sortBy('id');
+
+    expect($translated)->toBeCollection()->not->toBeEmpty();
+
+    \PHPUnit\Framework\assertEquals($translated[0]->locale['id'], $languages[0]->getKey());
+
+    \PHPUnit\Framework\assertEquals($translated[1]->locale['id'], $languages[1]->getKey());
+});

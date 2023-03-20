@@ -153,9 +153,7 @@ class Translator extends BaseTranslator
 
                 $translationObject->locale()->associate($locales[$locale]);
                 $translationObject->label()->associate($label);
-                // TODO: Test it
-                $newTranslationBag[] = array_intersect_key($translationObject->toArray(), array_flip(['label', 'locale']));
-//                $newTranslationBag[] = Arr::except($translationObject->toArray(), ['label', 'locale']);
+                $newTranslationBag[] = array_intersect_key($translationObject->toArray(), array_flip(['label_id', 'language_id','text']));
             }
         }
 

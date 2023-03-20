@@ -15,6 +15,17 @@ class LanguageFactory extends Factory
      */
     public function definition(): array
     {
-        return LanguageSeeder::languages()[111];
+        return [
+            'locale' => 'en',
+            'name' => 'English'
+        ];
+    }
+
+    public function random(): static
+    {
+        return $this->state(function () {
+            $index = $this->faker->numberBetween(0, count(LanguageSeeder::languages()));
+            return LanguageSeeder::languages()[$index];
+        });
     }
 }
