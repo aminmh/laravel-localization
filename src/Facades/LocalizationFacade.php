@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static Translation translate(Label $label, string $text, ?string $locale = null)
  * @method static bool bulkTranslate(Label $label, array $translations)
  * @method static array|Collection translated(?string $locale = null)
- * @method static array|Collection notTranslated(string|Language|null $locale = null, $category = null)
+ * @method static Collection|Language notTranslated(string|Language|null $locale = null, $category = null)
  * @method static string flagPath(string $locale)
  *
  * @see \Bugloos\LaravelLocalization\Translator
