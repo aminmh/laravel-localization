@@ -153,7 +153,7 @@ class Translator extends BaseTranslator
 
                 $translationObject->locale()->associate($locales[$locale]);
                 $translationObject->label()->associate($label);
-                $newTranslationBag[] = array_intersect_key($translationObject->toArray(), array_flip(['label_id', 'language_id','text']));
+                $newTranslationBag[] = array_intersect_key($translationObject->toArray(), array_flip(['label_id', 'language_id', 'text']));
             }
         }
 
@@ -234,6 +234,20 @@ class Translator extends BaseTranslator
         }
 
         return ($path .= "/{$locale}.{$mimeType}");
+    }
+
+    public function activeLanguage(string $locale): bool
+    {
+        /** @var Language $language */
+        $language = $this->findLocale($locale, false)->first();
+        return $language?->activationToggle(true) ?? false;
+    }
+
+    public function deActiveLanguage(string $locale): bool
+    {
+        /** @var Language $language */
+        $language = $this->findLocale($locale, true)->first();
+        return $language?->activationToggle(false) ?? false;
     }
 
     private function notTranslatedInLocale(string|Language $locale): Language

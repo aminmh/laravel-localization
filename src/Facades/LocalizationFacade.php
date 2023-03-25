@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static bool has(string $key, ?string $locale = null, ?string $fallback = true)
  * @method static Label addLabel(string $key, int|string|Category $group)
  * @method static Category addCategory(string $name)
+ * @method static bool activeLanguage(string $locale)
+ * @method static bool deActiveLanguage(string $locale)
  * @method static Translation translate(Label $label, string $text, ?string $locale = null)
  * @method static bool bulkTranslate(Label $label, array $translations)
  * @method static array|Collection translated(?string $locale = null)

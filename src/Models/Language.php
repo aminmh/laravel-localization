@@ -28,9 +28,13 @@ class Language extends Model
     public $timestamps = false;
 
     protected $table = 'languages';
-    protected $fillable = ['locale', 'active', 'name'];
+    protected $fillable = ['locale', 'name'];
+
+    protected $attributes = ['active' => false];
 
     protected $hidden = ['active'];
+
+    public $casts = ['active' => 'boolean'];
 
     protected $appends = ['flag'];
 
@@ -64,11 +68,10 @@ class Language extends Model
         return $this->belongsTo(Country::class, 'country_id');
     }
 
-    public function avtivationToggle(bool $toggle)
+    public function activationToggle(bool $toggle): bool
     {
-        return $this->update([
-            'active' => $toggle,
-        ]);
+        $this->active = $toggle;
+        return $this->save();
     }
 
     public function scopeInActives(Builder $query)

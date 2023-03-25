@@ -4,10 +4,10 @@ use Bugloos\LaravelLocalization\Facades\LocalizationFacade as Localization;
 use Bugloos\LaravelLocalization\Models;
 use Pest\Laravel as Assert;
 
-beforeEach(function () {
-    $this->locale = Models\Language::factory()->random()->createOne();
-    $this->locale->update(['active' => 1]);
-});
+//beforeEach(function () {
+//    $this->locale = Models\Language::factory()->random()->createOne();
+//    $this->locale->update(['active' => 1]);
+//});
 
 dataset('translate', [fn () => \Pest\Faker\faker()->sentence()]);
 dataset('locale', [fn () => Models\Language::factory()->createOne()]);
@@ -38,6 +38,17 @@ it('make new label', function () {
     Assert\assertDatabaseHas('labels', [
         'key' => $label->getAttribute('key')
     ]);
+});
+
+it('activate a language', function () {
+    $language = Models\Language::factory()->random()->create();
+    expect($language)->toBeInstanceOf(Models\Language::class)->not->toBeNull();
+    $result = \Bugloos\LaravelLocalization\Facades\LocalizationFacade::activeLanguage($language->getAttribute('locale'));
+    \PHPUnit\Framework\assertTrue($result);
+    $language = Models\Language::findOnly($language->getAttribute('locale'), true)->first();
+    expect($language)->not->toBeNull();
+    $language = $language->makeVisible('active');
+    \PHPUnit\Framework\assertTrue($language->active);
 });
 
 it('translate a label', function () {
