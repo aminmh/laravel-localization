@@ -40,6 +40,31 @@ it('make new label', function () {
     ]);
 });
 
+it('activate a language', function () {
+    $language = Models\Language::factory()->random()->create();
+    expect($language)->toBeInstanceOf(Models\Language::class)->not->toBeNull();
+    $result = \Bugloos\LaravelLocalization\Facades\LocalizationFacade::activeLanguage($language->getAttribute('locale'));
+    \PHPUnit\Framework\assertTrue($result);
+    $language = Models\Language::findOnly($language->getAttribute('locale'), true)->first();
+    expect($language)->not->toBeNull();
+    \PHPUnit\Framework\assertTrue($language->active);
+});
+
+it('de-active a language', function () {
+    $language = $this->locale;
+    expect($language)->toBeInstanceOf(Models\Language::class)->not->toBeNull();
+    \PHPUnit\Framework\assertFalse($language->active);
+    $result = \Bugloos\LaravelLocalization\Facades\LocalizationFacade::activeLanguage($language->getAttribute('locale'));
+    \PHPUnit\Framework\assertTrue($result);
+    $language = Models\Language::findOnly($language->getAttribute('locale'), true)->first();
+    \PHPUnit\Framework\assertTrue($language->active);
+    $result = \Bugloos\LaravelLocalization\Facades\LocalizationFacade::deActiveLanguage($language->locale);
+    \PHPUnit\Framework\assertTrue($result);
+    $language = Models\Language::findOnly($language->locale, false)->first();
+    \PHPUnit\Framework\assertNotNull($language);
+    \PHPUnit\Framework\assertFalse($language->active);
+});
+
 it('translate a label', function () {
     $label = Models\Label::factory()->genuine()->createOne();
 
