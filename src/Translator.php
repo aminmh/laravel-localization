@@ -199,12 +199,13 @@ class Translator extends BaseTranslator
             return $this->notTranslatedInCategory($category);
         }
 
+        $activeLocales = $this->findLocale(active: true)->get();
+
         return Category::all()
-            ->map(function (Category $category) {
+            ->map(function (Category $category) use ($activeLocales) {
                 return $category->setAttribute(
                     'not_translated',
-                    $this->findLocale(active: true)
-                        ->get()
+                    $activeLocales
                         ->map(function (Language $locale) use ($category) {
                             return $locale->setAttribute(
                                 'labels',

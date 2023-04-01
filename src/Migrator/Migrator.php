@@ -3,6 +3,7 @@
 namespace Bugloos\LaravelLocalization\Migrator;
 
 use Bugloos\LaravelLocalization\Abstract\AbstractMigrator;
+use Bugloos\LaravelLocalization\Exceptions\MigratorFilesNotFoundException;
 use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\ArrayLoaderStrategy;
 use Bugloos\LaravelLocalization\Migrator\LoaderStrategies\JsonLoaderStrategy;
 use Bugloos\LaravelLocalization\Migrator\MigratorStrategies\ArrayMigrator;
@@ -52,6 +53,10 @@ class Migrator
     private function initializeStrategies(string $path, array $filter = []): void
     {
         $files = $this->getRecursiveDirAndFiles($path, $filter);
+
+        if (empty($files)) {
+            throw new MigratorFilesNotFoundException($path, 404);
+        }
 
         $customStrategies = array_filter($files, static function ($filePath) {
             return !in_array(pathinfo($filePath, PATHINFO_EXTENSION), ['php', 'json']);
@@ -103,7 +108,7 @@ class Migrator
     private function normalizePath(string $path, array $filter = []): array
     {
         if (!$this->isSubDirectoryOfLang($path)) {
-            throw new \BadMethodCallException(sprintf("The given path should be point to directory and also sub-directory of %s !", base_path('/lang')), 400);
+            throw new \BadMethodCallException(sprintf("The given path should be point to directory and also sub-directory of %s !", base_path('lang')), 400);
         }
 
         if (is_dir($path)) {
@@ -120,6 +125,10 @@ class Migrator
 
     private function isSubDirectoryOfLang(string $path): bool
     {
+        if ($path === base_path('lang')) {
+            return true;
+        }
+
         if ($path === base_path()) {
             return false;
         }
