@@ -4,10 +4,10 @@ use Bugloos\LaravelLocalization\Facades\LocalizationFacade as Localization;
 use Bugloos\LaravelLocalization\Models;
 use Pest\Laravel as Assert;
 
-beforeEach(function () {
-    $this->locale = Models\Language::factory()->random()->createOne();
-    $this->locale->update(['active' => 1]);
-});
+//beforeEach(function () {
+//    $this->locale = Models\Language::factory()->random()->createOne();
+//    $this->locale->update(['active' => 1]);
+//});
 
 dataset('translate', [fn () => \Pest\Faker\faker()->sentence()]);
 dataset('locale', [fn () => Models\Language::factory()->createOne()]);
@@ -173,4 +173,9 @@ it('translates a label into multiple languages', function () {
     \PHPUnit\Framework\assertEquals($translated[0]->locale['id'], $languages[0]->getKey());
 
     \PHPUnit\Framework\assertEquals($translated[1]->locale['id'], $languages[1]->getKey());
+});
+
+it('translate label locally', function () {
+    $translated = translate('auth.failed', [], 'en');
+    \PHPUnit\Framework\assertNotSame('auth.failed', $translated);
 });

@@ -39,7 +39,7 @@ class Label extends Model
             ->firstWhere('key', $identifier);
     }
 
-    protected static function newFactory()
+    protected static function newFactory(): LabelFactory
     {
         return LabelFactory::new();
     }

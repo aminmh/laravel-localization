@@ -1,6 +1,6 @@
 <?php
 
-if (!function_exists('trans_get')) {
+if (!function_exists('translate')) {
     /**
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Psr\Container\NotFoundExceptionInterface
