@@ -36,8 +36,8 @@ class Translator extends BaseTranslator
         $locale = $locale ?: $this->locale;
 
         // For JSON translations, there is only one file per locale, so we will simply load
-        // that file and then we will be ready to check the array for the key. These are
-        // only one level deep so we do not need to do any fancy searching through it.
+        // that file, and then we will be ready to check the array for the key. These are
+        // only one level deep, so we do not need to do any fancy searching through it.
         $this->load('*', '*', $locale);
 
         try {
@@ -72,7 +72,7 @@ class Translator extends BaseTranslator
 
         // If the line doesn't exist, we will return back the key which was requested as
         // that will be quick to spot in the UI if language keys are wrong or missing
-        // from the application's language files. Otherwise we can return the line.
+        // from the application's language files. Otherwise, we can return the line.
         return $this->makeReplacements($line ?: $key, $replace);
     }
 
@@ -199,12 +199,13 @@ class Translator extends BaseTranslator
             return $this->notTranslatedInCategory($category);
         }
 
+        $activeLocales = $this->findLocale(active: true)->get();
+
         return Category::all()
-            ->map(function (Category $category) {
+            ->map(function (Category $category) use ($activeLocales) {
                 return $category->setAttribute(
                     'not_translated',
-                    $this->findLocale(active: true)
-                        ->get()
+                    $activeLocales
                         ->map(function (Language $locale) use ($category) {
                             return $locale->setAttribute(
                                 'labels',

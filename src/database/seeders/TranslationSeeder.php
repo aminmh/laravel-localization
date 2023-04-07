@@ -9,6 +9,8 @@ use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
+use function Pest\Faker\faker;
+
 class TranslationSeeder extends Seeder
 {
     use ConfiguredTableName;
@@ -21,81 +23,12 @@ class TranslationSeeder extends Seeder
             DB::table($this->getTable(Translation::class))->insert(
                 Label::all()->map(
                     fn ($label) => [
-                        'text' => $this->{$locale}($label->key),
+                        'text' => faker()->sentence(),
                         'label_id' => $label->id,
                         'language_id' => $localeId,
                     ]
                 )->toArray()
             );
         }
-    }
-
-    private function nl(string $key)
-    {
-        return [
-            'car' => 'auto',
-            'home' => 'thuis',
-            'job' => 'functie',
-            'credit card' => 'kredietkaart',
-            'bank' => 'bank',
-            'mother' => 'moeder',
-            'family' => 'familie',
-            'plan' => 'plan',
-            'map' => 'kaart',
-            'world' => 'wereld-',
-            'computer' => 'computer',
-            'phone' => 'telefoon',
-            'error' => 'fout',
-            'label' => 'label',
-            'doctor' => 'dokter',
-            'teacher' => 'docent',
-            'lesson' => 'les',
-            'network' => 'netwerk',
-            'internet' => 'internetten',
-            'process' => 'werkwijze',
-            'drag' => 'sleuren',
-            'love' => 'liefde',
-            'friend' => 'vriend',
-            'realationship' => 'relatie',
-            'dog' => 'hond',
-            'engineer' => 'ingenieur',
-        ][$key];
-    }
-
-    private function en(string $key)
-    {
-        $labels = [
-            'car',
-            'home',
-            'job',
-            'credit card',
-            'bank',
-            'mother',
-            'family',
-            'plan',
-            'map',
-            'world',
-            'computer',
-            'phone',
-            'error',
-            'label',
-            'doctor',
-            'teacher',
-            'lesson',
-            'network',
-            'internet',
-            'process',
-            'drag',
-            'love',
-            'friend',
-            'realationship',
-            'dog',
-            'engineer',
-        ];
-
-        return array_map(
-            fn ($label) => ucwords($labels[$label]),
-            array_flip($labels)
-        )[$key];
     }
 }
