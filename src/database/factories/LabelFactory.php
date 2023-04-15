@@ -5,6 +5,8 @@ namespace Bugloos\LaravelLocalization\database\factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 
+use function Pest\Faker\faker;
+
 class LabelFactory extends Factory
 {
     protected $model = \Bugloos\LaravelLocalization\Models\Label::class;
@@ -12,7 +14,7 @@ class LabelFactory extends Factory
     public function definition()
     {
         return [
-            'key' => fake()->word(),
+            'key' => fake()->word() . '-' . faker()->numberBetween(1, 9999),
         ];
     }
 
@@ -23,8 +25,13 @@ class LabelFactory extends Factory
         }
 
         return $this->sequence(function (Sequence $sequence) {
+            $random = $this->faker->numberBetween($sequence->index, count(static::labels()) - 1);
+            $index = $sequence->index + $random;
+            if (!isset(static::labels()[$index])) {
+                $index = $sequence->index - $random;
+            }
             return [
-                'key' => static::labels()[$sequence->index + $this->faker->numberBetween($sequence->index, count(static::labels()) - 1)]
+                'key' => static::labels()[$index]
             ];
         });
     }

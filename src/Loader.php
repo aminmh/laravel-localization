@@ -19,16 +19,18 @@ class Loader extends FileLoader
         return $lines;
     }
 
-    protected function loadFromDB($locale, $group)
+    protected function loadFromDB($locale, $group): array
     {
         return Label::query()
             ->whereRelation('category', 'name', $group)
             ->with(
-                'translation', static function (Relation $query) use ($locale) {
-                $query->whereRelation('locale', 'locale', $locale);
-            })
+                'translation',
+                static function (Relation $query) use ($locale) {
+                    $query->whereRelation('locale', 'locale', $locale);
+                }
+            )
             ->get()
-            ->pluck('translation', 'key')
+            ->pluck('translation.text', 'key')
             ->toArray();
     }
 }

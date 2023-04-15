@@ -2,6 +2,7 @@
 
 namespace Bugloos\LaravelLocalization\Commands;
 
+use Bugloos\LaravelLocalization\Exceptions\MigratorFilesNotFoundException;
 use Bugloos\LaravelLocalization\Facades\MigratorFacade;
 use Bugloos\LaravelLocalization\Responses\MigratorResponse;
 use Illuminate\Console\Command;
@@ -14,7 +15,7 @@ class Migrate extends Command
      *
      * @var string
      */
-    protected $signature = 'localization:migrate {path}';
+    protected $signature = 'localization:migrate {path} {--lang=}';
 
     /**
      * The console command description.
@@ -33,7 +34,16 @@ class Migrate extends Command
         try {
             $path = $this->argument('path');
 
-            MigratorFacade::load($path);
+            $filter = (array)$this->option('lang');
+
+            try {
+                MigratorFacade::load($path, $filter);
+            } catch (MigratorFilesNotFoundException $ex) {
+                echo $ex->getMessage();
+                return Command::FAILURE;
+            }
+
+            $this->info(sprintf('All files in %s translated successfully!', $path));
 
             return Command::SUCCESS;
         } catch (QueryException $ex) {

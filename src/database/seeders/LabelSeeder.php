@@ -15,19 +15,8 @@ class LabelSeeder extends Seeder
 
         if (count($categories)) {
             foreach ($categories as $category) {
-                LabelFactory::createWithRealNames(10, ['category_id' => $category->id]);
+                LabelFactory::new(['category_id' => $category->id])->count(5)->create();
             }
         }
-    }
-
-    private function createWithFakeNames(int $count = 0, array $attributes = [])
-    {
-        $factory = Label::factory();
-
-        if ($count) {
-            return $factory->count($count)->create($attributes);
-        }
-
-        return $factory->create($attributes);
     }
 }
