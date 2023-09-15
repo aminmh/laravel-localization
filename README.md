@@ -57,6 +57,6 @@ You can choose also locale and category or both them or none of them :
 Sometimes you have own categorized translated labels or Front-End teams give it to you, and you should add these files or file to system, don't worry, Laravel Localization handle it for you easily with simple artisan command :
 
 ```php
-php artisan localization:migrate path_your_files
+php artisan localization:migrate path_your_files [--lang=en]
 ```
 
