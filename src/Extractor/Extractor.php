@@ -15,18 +15,6 @@ class Extractor
         $extractor->write($path);
     }
 
-    /**
-     * @throws \Exception
-     */
-    public static function lazyExtract(ExtractorType $extractor, ?string $path = null): void
-    {
-        if (!$path) {
-            $path = static::path();
-        }
-
-        $extractor->lazyWrite($path);
-    }
-
     private static function path(): string
     {
         return config('localization.extract.export_path');

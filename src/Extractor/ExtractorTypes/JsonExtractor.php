@@ -3,27 +3,21 @@
 namespace Bugloos\LaravelLocalization\Extractor\ExtractorTypes;
 
 use Bugloos\LaravelLocalization\Abstract\AbstractExtractor;
-use Bugloos\LaravelLocalization\Contracts\ExporterDataTransformerInterface;
 use Bugloos\LaravelLocalization\Models\Category;
 use Bugloos\LaravelLocalization\Traits\InteractWithNestedArrayTrait;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Enumerable;
-use Traversable;
 
-class JsonExtractor extends AbstractExtractor implements ExporterDataTransformerInterface
+class JsonExtractor extends AbstractExtractor
 {
     use InteractWithNestedArrayTrait;
 
     public function write(string $path): bool
     {
-        return file_put_contents(sprintf("%s/%s", rtrim($path, '/'), $this->fileName()), $this->writableData()) || false;
+        return file_put_contents(sprintf("%s/%s", rtrim($path, '/'), $this->fileName()), $this->makeWritableToFile());
     }
 
-    public function transform(mixed $data): array
+    protected function transform(array $data): array
     {
-        if (!$data instanceof Enumerable) {
-            $data = collect([$data]);
-        }
+        $data = collect($data);
 
         $categories = $data->map(static fn (Category $category) => [
             $category->name => $category
@@ -34,7 +28,7 @@ class JsonExtractor extends AbstractExtractor implements ExporterDataTransformer
         ])->toArray();
 
         foreach ($categories as &$labels) {
-            $this->convertFlat2NestedArray($labels);
+            $this->convertFlatArrayToNestedArray($labels);
         }
 
         return $categories;
@@ -43,11 +37,11 @@ class JsonExtractor extends AbstractExtractor implements ExporterDataTransformer
     /**
      * @throws \JsonException
      */
-    protected function writableData(): string
+    protected function makeWritableToFile(): string
     {
-        $data = $this->getData();
+        $data = $this->data;
 
-        if (array_is_list($data)) {
+        if (array_is_list($this->data)) {
             $data = $this->mergeAllItemsTogether($data);
         }
 

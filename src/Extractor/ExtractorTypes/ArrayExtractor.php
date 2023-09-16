@@ -16,42 +16,32 @@ class ArrayExtractor extends AbstractExtractor implements ExporterDataTransforme
     public function write(string $path): bool
     {
         $path = sprintf('%s/%s', rtrim($path, '/'), $this->fileName());
-        $content = str_replace("{{ARRAY_CONTENT}}", $this->writableData(), $this->stub());
-        return file_put_contents($path, $content) || false;
+        $content = str_replace("{{ARRAY_CONTENT}}", $this->makeWritableToFile(), $this->stub());
+        return file_put_contents($path, $content);
     }
 
-    public function transform(mixed $data): array
+    public function transform(array $data): array
     {
-        if ($data instanceof Enumerable) {
-            $labels = $data->map(
-                static fn (Category $item) => $item->labels()->get()->pluck('translation.text', 'key')->toArray()
-            )->toArray();
-        } else {
-            $labels = Arr::pluck($data->labels, 'translation.text', 'key');
-        }
+        $data = collect($data);
 
-        $this->convertFlat2NestedArray($labels);
+        $labels = $data->map(
+            static fn (Category $item) => $item->labels()->get()->pluck('translation.text', 'key')->toArray()
+        )->toArray();
+
+
+        $this->convertFlatArrayToNestedArray($labels);
 
         return $labels;
     }
-
-//    public function getIterator(): Traversable
-//    {
-//        if ($this->category === '*') {
-//            foreach ($this->sourceQuery()->cursor() as $item) {
-//                yield $item;
-//            }
-//        }
-//    }
 
     protected function fileName(): string
     {
         return sprintf("%s_%s.php", $this->category, strtoupper($this->locale));
     }
 
-    protected function writableData(): string
+    protected function makeWritableToFile(): string
     {
-        $data = $this->getData();
+        $data = $this->data;
 
         if (array_is_list($data)) {
             $result = [];
