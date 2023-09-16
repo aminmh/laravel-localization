@@ -3,8 +3,9 @@
 namespace Bugloos\LaravelLocalization\Commands;
 
 use Bugloos\LaravelLocalization\Extractor\Extractor;
+use Bugloos\LaravelLocalization\Factory\ExtractorFactory;
+use Bugloos\LaravelLocalization\Factory\Model\ExtractorInitializerModel;
 use Illuminate\Console\Command;
-use Symfony\Component\Console\Exception\InvalidOptionException;
 
 class Extract extends Command
 {
@@ -13,7 +14,7 @@ class Extract extends Command
      *
      * @var string
      */
-    protected $signature = "localization:extract {locale} {format} {--lazy=} {--path=} {--category=}";
+    protected $signature = "localization:extract {locale} {format} {--path=} {--category=}";
 
     /**
      * The console command description.
@@ -34,22 +35,13 @@ class Extract extends Command
 
             $format = $this->argument('format');
 
-            $extractors = config('localization.extract.extractors');
-
-            if (!array_key_exists($format, $extractors)) {
-                throw new InvalidOptionException(sprintf('The %s not be configured in localization\'s extractors config!', $format));
-            }
-
             $path = $this->option('path');
 
             $category = $this->option('category');
 
-            $extractor = (new $extractors[$format]($locale, $category ?? '*'));
+            $extractor = ExtractorFactory::createByModel(new ExtractorInitializerModel($locale, $format));
 
-            if ($this->option('lazy')) {
-                Extractor::lazyExtract($extractor, $path);
-                return Command::SUCCESS;
-            }
+            $extractor->setCategory($category ?? '*');
 
             Extractor::extract($extractor, $path);
 

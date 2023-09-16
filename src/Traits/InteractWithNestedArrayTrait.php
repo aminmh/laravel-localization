@@ -4,7 +4,7 @@ namespace Bugloos\LaravelLocalization\Traits;
 
 trait InteractWithNestedArrayTrait
 {
-    public function getOnlyNested(array $data): array
+    public function getOnlyNestedArray(array $data): array
     {
         return array_filter($data, static function (array|string $value, $key) {
             if (is_array($value)) {
@@ -13,7 +13,7 @@ trait InteractWithNestedArrayTrait
         }, ARRAY_FILTER_USE_BOTH);
     }
 
-    public function convertNested2FlatArray(array $nestedData): array
+    public function convertNestedArrayToFlatArray(array $nestedData): array
     {
         $recursiveIterator = new \RecursiveIteratorIterator(new \RecursiveArrayIterator($nestedData));
 
@@ -32,18 +32,18 @@ trait InteractWithNestedArrayTrait
         return $result;
     }
 
-    public function removeNestedKeys(array &$data, array $keys): void
+    public function removeNestedArrayKeys(array &$data, array $keys): void
     {
         foreach ($keys as $key) {
             unset($data[$key]);
         }
     }
 
-    protected function convertFlat2NestedArray(array &$data): void
+    protected function convertFlatArrayToNestedArray(array &$data): void
     {
         foreach ($data as $key => &$value) {
             if (is_array($value)) {
-                $this->convertFlat2NestedArray($value);
+                $this->convertFlatArrayToNestedArray($value);
             }
 
             if (str_contains($key, '.')) {
@@ -55,7 +55,7 @@ trait InteractWithNestedArrayTrait
                 }
                 $data[$category] = $child;
                 unset($data[$key]);
-                $this->convertFlat2NestedArray($data);
+                $this->convertFlatArrayToNestedArray($data);
             }
         }
     }

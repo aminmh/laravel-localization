@@ -2,69 +2,50 @@
 
 namespace Bugloos\LaravelLocalization\Abstract;
 
-use Bugloos\LaravelLocalization\Contracts\ExporterDataTransformerInterface;
-use Bugloos\LaravelLocalization\Contracts\LazyCallExtractorInterface;
 use Bugloos\LaravelLocalization\Models\Category;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Traversable;
+use Illuminate\Database\Eloquent as Eloquent;
 
-abstract class AbstractExtractor implements LazyCallExtractorInterface, \IteratorAggregate
+abstract class AbstractExtractor
 {
-    private mixed $data;
+    protected mixed $data;
+
+    protected string $category = '*';
 
     public function __construct(
-        public readonly string $locale,
-        public readonly string $category = '*'
+        public readonly string $locale
     ) {
-        if ($category === '*') {
-            $this->data = $this->sourceQuery()->get();
-        } else {
-            $this->data = $this->sourceQuery()->firstWhere('name', $category);
-        }
+        $this->data = $this->transform($this->getData());
+    }
+
+    public function setCategory(string $category): void
+    {
+        $this->category = $category;
     }
 
     abstract public function write(string $path): bool;
 
-    abstract protected function writableData(): string;
+    abstract protected function makeWritableToFile(): string;
 
     abstract protected function fileName(): string;
 
-    /**
-     * @throws \Exception
-     */
-    public function lazyWrite(string $path): void
+    protected function sourceQuery(): Eloquent\Builder
     {
-        $dataBuffer = collect();
-
-        foreach ($this as $item) {
-            $dataBuffer->push($item);
-        }
-
-        $this->data = $dataBuffer;
-        $this->write($path);
-    }
-
-    public function getIterator(): Traversable
-    {
-        foreach ($this->sourceQuery()->cursor() as $item) {
-            yield $item;
-        }
-    }
-
-    protected function getData(): array|\ArrayAccess
-    {
-        if ($this instanceof ExporterDataTransformerInterface) {
-            return $this->transform($this->data);
-        }
-
-        return $this->data;
-    }
-
-    protected function sourceQuery(): Builder
-    {
-        return Category::with(['labels.translation' => function (Relation $query) {
+        return Category::with(['labels.translation' => function (Eloquent\Relations\Relation $query) {
             $query->whereRelation('locale', 'locale', $this->locale);
         }]);
+    }
+
+    protected function transform(array $data): array
+    {
+        return $data;
+    }
+
+    private function getData(): array
+    {
+        if ($this->category === '*') {
+            return $this->sourceQuery()->get()->toArray();
+        }
+
+        return [$this->sourceQuery()->firstWhere('name', $this->category)];
     }
 }

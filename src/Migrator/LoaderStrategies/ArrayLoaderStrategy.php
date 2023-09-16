@@ -13,10 +13,11 @@ class ArrayLoaderStrategy extends AbstractLoader implements FileNameAsCategoryIn
     public function readContent(string $path): array
     {
         $data = require $path;
+        $nestedData = $this->getOnlyNestedArray($data);
 
-        if (!empty($nestedData = $this->getOnlyNested($data))) {
-            $flattenData = $this->convertNested2FlatArray($nestedData);
-            $this->removeNestedKeys($data, array_keys($nestedData));
+        if (!empty($nestedData)) {
+            $flattenData = $this->convertNestedArrayToFlatArray($nestedData);
+            $this->removeNestedArrayKeys($data, array_keys($nestedData));
             $data = array_merge($data, $flattenData);
         }
 
