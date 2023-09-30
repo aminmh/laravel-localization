@@ -4,13 +4,9 @@ namespace Bugloos\LaravelLocalization\Traits;
 
 trait InteractWithNestedArrayTrait
 {
-    public function getOnlyNestedArray(array $data): array
+    public function getNestedArray(array $data): array
     {
-        return array_filter($data, static function (array|string $value, $key) {
-            if (is_array($value)) {
-                return $key;
-            }
-        }, ARRAY_FILTER_USE_BOTH);
+        return array_filter($data, static fn (array|string $value) => is_array($value));
     }
 
     public function convertNestedArrayToFlatArray(array $nestedData): array
@@ -30,13 +26,6 @@ trait InteractWithNestedArrayTrait
         }
 
         return $result;
-    }
-
-    public function removeNestedArrayKeys(array &$data, array $keys): void
-    {
-        foreach ($keys as $key) {
-            unset($data[$key]);
-        }
     }
 
     protected function convertFlatArrayToNestedArray(array &$data): void

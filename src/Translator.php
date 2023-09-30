@@ -112,17 +112,23 @@ class Translator extends BaseTranslator
     public function translate(Label $label, string $translation, ?string $locale = null): Translation
     {
         try {
-            if ($locale) {
-                $localeObject = $this->findLocale($locale)->first() ?? throw new ModelNotFoundException(sprintf(ExceptionMessages::NOT_FOUND->value, $locale), 404);
-            } else {
-                $localeObject = $this->findLocale($this->getLocale())->first();
+            if (!$locale) {
+                $locale = $this->getLocale();
             }
 
-            if (false !== ($oldTranslation = $this->hasTranslationWithLocale($label, $localeObject))) {
+            $language = Language::findActivatedByLocale($locale);
+
+            if (!$language) {
+                throw new ModelNotFoundException(sprintf(ExceptionMessages::NOT_FOUND->value, $locale), 404);
+            }
+
+            if ($label->isTranslatedInLanguage($language)) {
+                $oldTranslation = $label->getTranslate($language);
                 return $this->updateTranslation($oldTranslation, $translation);
             }
 
-            return $this->createNewTranslation($label, $translation, $localeObject);
+
+            return $this->createNewTranslation($label, $translation, $language);
         } catch (QueryException $ex) {
             throw new TranslationFailureException(
                 new FailedTranslationDTO($label->key, $label->category->name, $translation, $locale),
@@ -168,25 +174,26 @@ class Translator extends BaseTranslator
     {
         $locale = $locale ?: $this->getLocale();
 
-        $isLocaleActive = (bool)$this->findLocale($locale, true)->first();
+        $language = Language::findByLocale($locale);
 
-        if ($isLocaleActive) {
-            return Category::with('labels')->get()
-                ->map(static function (Category $category) use ($locale) {
-                    return $category->setAttribute(
-                        'translated_labels',
-                        $category->labels()
-                            ->with('translation', function (Relation $query) use ($locale) {
-                                $query->whereRelation('locale', 'locale', $locale);
-                            })
-                            ->lazy(100)
-                            ->pluck('translation.text', 'key')
-                            ->all()
-                    );
-                });
+        if ($language->isNotActive()) {
+            return [];
         }
 
-        return [];
+        return Category::with('labels')->get()
+            ->map(static function (Category $category) use ($locale) {
+                return $category->setAttribute(
+                    'translated_labels',
+                    $category->labels()
+                        ->with('translation', function (Relation $query) use ($locale) {
+                            $query->whereRelation('locale', 'locale', $locale);
+                        })
+                        ->lazy(100)
+                        ->pluck('translation.text', 'key')
+                        ->all()
+                );
+            });
+
     }
 
     public function notTranslated($locale = null, $category = null)
@@ -199,7 +206,7 @@ class Translator extends BaseTranslator
             return $this->notTranslatedInCategory($category);
         }
 
-        $activeLocales = $this->findLocale(active: true)->get();
+        $activeLocales = Language::actives()->get();
 
         return Category::all()
             ->map(function (Category $category) use ($activeLocales) {
@@ -237,24 +244,34 @@ class Translator extends BaseTranslator
         return ($path .= "/{$locale}.{$mimeType}");
     }
 
-    public function activeLanguage(string $locale): bool
+    public function activeLanguage(string $locale): void
     {
-        /** @var Language $language */
-        $language = $this->findLocale($locale, false)->first();
-        return $language?->activationToggle(true) ?? false;
+        $language = Language::findDeActivatedByLocale($locale);
+
+        if ($language) {
+            $language->activate();
+            return;
+        }
+
+        throw new ModelNotFoundException(sprintf('Language %s not found!', $locale));
     }
 
-    public function deActiveLanguage(string $locale): bool
+    public function deActiveLanguage(string $locale): void
     {
-        /** @var Language $language */
-        $language = $this->findLocale($locale, true)->first();
-        return $language?->activationToggle(false) ?? false;
+        $language = Language::findActivatedByLocale($locale);
+
+        if ($language) {
+            $language->deActivate();
+            return;
+        }
+
+        throw new ModelNotFoundException(sprintf('Language %s not found!', $locale));
     }
 
     private function notTranslatedInLocale(string|Language $locale): Language
     {
         if (is_string($locale)) {
-            $locale = $this->findLocale($locale, true)->first();
+            $locale = Language::findActivatedByLocale($locale);
         }
 
         return $locale->setAttribute(
@@ -283,11 +300,6 @@ class Translator extends BaseTranslator
             ->get();
     }
 
-    protected function getLocaleOrFallback($locale, bool $fallback): array
-    {
-        return $fallback ? $this->localeArray($locale) : [$locale];
-    }
-
     private function updateTranslation(Translation $oldTranslation, string $newTranslationText): Translation
     {
         $oldTranslation->setAttribute('text', $newTranslationText);
@@ -310,37 +322,5 @@ class Translator extends BaseTranslator
         $translationModel->save();
 
         return $translationModel;
-    }
-
-    private function findLocale(?string $locale = null, ?bool $active = null): Builder
-    {
-        $query = Language::query();
-
-        if ($locale) {
-            $query->where('locale', $locale);
-        }
-
-        if ($active) {
-            return $query->where('active', true);
-        }
-
-        if ($active === false) {
-            return $query->where('active', false);
-        }
-
-        return $query;
-    }
-
-    private function hasTranslationWithLocale(Label $label, Language $locale): bool|Translation
-    {
-        $query = $label->translations()
-            ->whereHas(
-                relation: 'locale',
-                callback: static function (Builder $query) use ($locale) {
-                    $query->where('locale', $locale->getAttribute('locale'));
-                }
-            );
-
-        return $query->first() ?: false;
     }
 }

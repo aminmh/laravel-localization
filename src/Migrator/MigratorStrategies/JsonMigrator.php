@@ -9,18 +9,20 @@ class JsonMigrator extends BaseMigrator
 {
     public function migrate(): void
     {
-        if (empty($data = $this->loader->getContent())) {
+        $translations = $this->loader->getTranslations();
+
+        if (empty($translations)) {
             return;
         }
 
         $locale = $this->loader->getLocale();
 
-        foreach ($data as $category => $labelAndTranslate) {
+        foreach ($translations as $category => $labelAndTranslate) {
             $arrayLoader = new ArrayLoaderStrategy();
 
             $arrayLoader->setCategory($category)
                 ->setLocale($locale)
-                ->setContent($labelAndTranslate);
+                ->setTranslations($labelAndTranslate);
 
             (new ArrayMigrator($arrayLoader))->migrate();
         }

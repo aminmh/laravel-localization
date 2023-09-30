@@ -2,33 +2,39 @@
 
 namespace Bugloos\LaravelLocalization\Abstract;
 
-use Bugloos\LaravelLocalization\Contracts\FileNameAsCategoryInterface;
+use Bugloos\LaravelLocalization\Contracts\CategorizedByPathInterface;
 
 abstract class AbstractLoader
 {
-    protected string $path;
 
-    protected array $content;
+    protected array $translations;
 
     protected ?string $category = null;
 
     protected string $locale;
 
-    public function __construct(?string $path = null)
+    public function __construct(protected ?string $path = null)
     {
-        if ($path) {
-            $this->path = $path;
-            $this->setContent($this->readContent($path));
-            if ($this instanceof FileNameAsCategoryInterface) {
-                $this->setCategory($this->guessCategoryName($path));
-            }
-            $this->setLocale($this->guessLocale($path));
-        }
     }
 
-    abstract public function readContent(string $path): array;
+    public static function loadByPath(string $path): static
+    {
+        $newInstance = new static($path);
+        $newInstance->setTranslations($newInstance->readFileContent());
 
-    abstract public function guessLocale(string $path): string;
+        if ($newInstance instanceof CategorizedByPathInterface) {
+            $newInstance->setCategory($newInstance->getCategoryFromPath($path));
+        }
+
+        $newInstance->setLocale($newInstance->extractLocaleFromFilePath($path));
+
+        return $newInstance;
+
+    }
+
+    abstract public function readFileContent(): array;
+
+    abstract public function extractLocaleFromFilePath(string $path): string;
 
     public function getCategory(): string
     {
@@ -40,14 +46,14 @@ abstract class AbstractLoader
         return $this->locale;
     }
 
-    public function getContent(): array
+    public function getTranslations(): array
     {
-        return $this->content;
+        return $this->translations;
     }
 
-    public function setContent(array $content): void
+    public function setTranslations(array $translations): void
     {
-        $this->content = $content;
+        $this->translations = $translations;
     }
 
     public function setCategory(?string $category = null): self

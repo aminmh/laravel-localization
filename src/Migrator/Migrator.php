@@ -66,8 +66,8 @@ class Migrator
 
         foreach ($files as $filePath) {
             $this->strategies[] = match (pathinfo($filePath, PATHINFO_EXTENSION)) {
-                'php' => new ArrayMigrator(new ArrayLoaderStrategy($filePath)),
-                'json' => new JsonMigrator(new JsonLoaderStrategy($filePath)),
+                'php' => new ArrayMigrator(ArrayLoaderStrategy::loadByPath($filePath)),
+                'json' => new JsonMigrator(JsonLoaderStrategy::loadByPath($filePath)),
                 'yaml', 'yml' => null
             };
         }

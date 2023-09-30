@@ -9,10 +9,10 @@ class JsonLoaderStrategy extends AbstractLoader
 {
     use InteractWithNestedArrayTrait;
 
-    public function readContent(string $path): array
+    public function readFileContent(): array
     {
         try {
-            $decodedJson = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+            $decodedJson = json_decode(file_get_contents($this->path), true, 512, JSON_THROW_ON_ERROR);
         } catch (\JsonException) {
             return [];
         }
@@ -20,7 +20,7 @@ class JsonLoaderStrategy extends AbstractLoader
         return $this->extract($this->convertNestedArrayToFlatArray($decodedJson));
     }
 
-    public function guessLocale(string $path): string
+    public function extractLocaleFromFilePath(string $path): string
     {
         return pathinfo($path, PATHINFO_FILENAME);
     }

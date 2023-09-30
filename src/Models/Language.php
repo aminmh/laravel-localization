@@ -38,19 +38,29 @@ class Language extends Model
 
     protected $appends = ['flag'];
 
-    public static function findOnly(string $locale, ?bool $active = null)
+    public static function findActivatedByLocale(string $locale)
     {
-        $query = static::query();
+        return static::query()->scopes('actives')->firstWhere('locale', $locale);
+    }
 
-        if ($active) {
-            $query = $query->scopes('actives');
-        }
+    public static function findDeActivatedByLocale(string $locale)
+    {
+        return static::query()->scopes('inActives')->firstWhere('locale', $locale);
+    }
 
-        if ($active === false) {
-            $query = $query->scopes('inActives');
-        }
+    public static function findByLocale(string $locale): ?static
+    {
+        return static::query()->firstWhere('locale', $locale);
+    }
 
-        return $query->where('locale', $locale)->get();
+    public function isActive(): bool
+    {
+        return $this->active === true;
+    }
+
+    public function isNotActive(): bool
+    {
+        return $this->active === false;
     }
 
     protected static function newFactory(): LanguageFactory
@@ -68,18 +78,24 @@ class Language extends Model
         return $this->belongsTo(Country::class, 'country_id');
     }
 
-    public function activationToggle(bool $toggle): bool
+    public function activate(): void
     {
-        $this->active = $toggle;
-        return $this->save();
+        $this->active = true;
+        $this->save();
     }
 
-    public function scopeInActives(Builder $query)
+    public function deActivate(): void
+    {
+        $this->active = false;
+        $this->save();
+    }
+
+    public function scopeInActives(Builder $query): void
     {
         $query->where('active', 0);
     }
 
-    public function scopeActives(Builder $query)
+    public function scopeActives(Builder $query): void
     {
         $query->where('active', 1);
     }

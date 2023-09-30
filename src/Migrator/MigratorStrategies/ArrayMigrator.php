@@ -13,7 +13,7 @@ class ArrayMigrator extends BaseMigrator
 
         $locale = $this->loader->getLocale();
 
-        $data = $this->loader->getContent();
+        $data = $this->loader->getTranslations();
 
         foreach ($data as $label => $translate) {
             try {
