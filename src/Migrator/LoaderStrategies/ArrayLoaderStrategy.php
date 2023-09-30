@@ -3,36 +3,42 @@
 namespace Bugloos\LaravelLocalization\Migrator\LoaderStrategies;
 
 use Bugloos\LaravelLocalization\Abstract\AbstractLoader;
-use Bugloos\LaravelLocalization\Contracts\FileNameAsCategoryInterface;
+use Bugloos\LaravelLocalization\Contracts\CategorizedByPathInterface;
 use Bugloos\LaravelLocalization\Traits\InteractWithNestedArrayTrait;
 
-class ArrayLoaderStrategy extends AbstractLoader implements FileNameAsCategoryInterface
+class ArrayLoaderStrategy extends AbstractLoader implements CategorizedByPathInterface
 {
     use InteractWithNestedArrayTrait;
 
-    public function readContent(string $path): array
+    public function readFileContent(): array
     {
-        $data = require $path;
-        $nestedData = $this->getOnlyNestedArray($data);
+        $data = require $this->path;
+        $nestedArray = $this->getNestedArray($data);
 
-        if (!empty($nestedData)) {
-            $flattenData = $this->convertNestedArrayToFlatArray($nestedData);
-            $this->removeNestedArrayKeys($data, array_keys($nestedData));
-            $data = array_merge($data, $flattenData);
+        if (!empty($nestedArray)) {
+            $data = $this->normalizeAndMerge($data, $nestedArray);
         }
 
         return $data;
     }
 
-    public function guessCategoryName(string $path): string
+    public function getCategoryFromPath(string $path): string
     {
         return pathinfo($path, PATHINFO_FILENAME);
     }
 
-    public function guessLocale(string $path): string
+    public function extractLocaleFromFilePath(string $path): string
     {
         $directory = dirname($path);
 
         return substr($directory, strrpos($directory, '/') + 1);
+    }
+
+    private function normalizeAndMerge(array $source, array $nestedArray): array
+    {
+        $nestedArrayKeys = array_keys($nestedArray);
+        $distinctSource = array_filter($source, static fn ($key) => !in_array($key, $nestedArrayKeys, true), ARRAY_FILTER_USE_KEY);
+        $flattenArray = $this->convertNestedArrayToFlatArray($nestedArray);
+        return array_merge($distinctSource, $flattenArray);
     }
 }

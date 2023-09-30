@@ -11,27 +11,26 @@ class LabelFactory extends Factory
 {
     protected $model = \Bugloos\LaravelLocalization\Models\Label::class;
 
-    public function definition()
+    public function definition(): array
     {
         return [
             'key' => fake()->word() . '-' . faker()->numberBetween(1, 9999),
         ];
     }
 
-    public function genuine(): static
+    public function withRealName(): static
     {
         if ($this->count === 1) {
             return $this->one();
         }
 
+        if ($this->count > count(static::labels())) {
+            throw new \UnexpectedValueException(sprintf('Count can\'t be greater than %d', count(static::labels())));
+        }
+
         return $this->sequence(function (Sequence $sequence) {
-            $random = $this->faker->numberBetween($sequence->index, count(static::labels()) - 1);
-            $index = $sequence->index + $random;
-            if (!isset(static::labels()[$index])) {
-                $index = $sequence->index - $random;
-            }
             return [
-                'key' => static::labels()[$index]
+                'key' => static::labels()[$sequence->index]
             ];
         });
     }

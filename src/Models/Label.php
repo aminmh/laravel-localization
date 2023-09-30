@@ -4,6 +4,7 @@ namespace Bugloos\LaravelLocalization\Models;
 
 use Bugloos\LaravelLocalization\database\factories\LabelFactory;
 use Bugloos\LaravelLocalization\Traits\ConfiguredTableName;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,17 +27,20 @@ class Label extends Model
 
     protected $hidden = ['created_at', 'updated_at'];
 
-    public static function findBy(string|int $identifier, string $category)
+    public function getTranslate(Language $language): ?Translation
     {
-        $labelQuery = static::query();
+        return $this->translations()
+            ->whereHas(
+                relation: 'locale',
+                callback: static function (Builder $query) use ($language) {
+                    $query->where('locale', $language->locale);
+                }
+            )->first();
+    }
 
-        if (is_numeric($identifier)) {
-            return $labelQuery->find($identifier);
-        }
-
-        return $labelQuery
-            ->whereRelation('category', 'name', $category)
-            ->firstWhere('key', $identifier);
+    public function isTranslatedInLanguage(Language $language): bool
+    {
+        return (bool)$this->getTranslate($language) ?? false;
     }
 
     protected static function newFactory(): LabelFactory

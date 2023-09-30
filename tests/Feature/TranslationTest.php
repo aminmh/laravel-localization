@@ -25,7 +25,7 @@ it('make new category', function () {
 it('make new label', function () {
     $category = Models\Category::factory()->createOne();
 
-    $fakeLabel = Models\Label::factory()->genuine()->makeOne();
+    $fakeLabel = Models\Label::factory()->withRealName()->makeOne();
 
     $label = Localization::addLabel($fakeLabel->getAttribute('key'), $category);
 
@@ -43,48 +43,47 @@ it('make new label', function () {
 it('activate a language', function () {
     $language = Models\Language::factory()->random()->create();
     expect($language)->toBeInstanceOf(Models\Language::class)->not->toBeNull();
-    $result = \Bugloos\LaravelLocalization\Facades\LocalizationFacade::activeLanguage($language->getAttribute('locale'));
-    \PHPUnit\Framework\assertTrue($result);
-    $language = Models\Language::findOnly($language->getAttribute('locale'), true)->first();
+    \Bugloos\LaravelLocalization\Facades\LocalizationFacade::activeLanguage($language->locale);
+    $language = Models\Language::findActivatedByLocale($language->locale);
     expect($language)->not->toBeNull();
     \PHPUnit\Framework\assertTrue($language->active);
 });
 
-it('de-active a language', function () {
-    $language = $this->locale;
+it('de-active a language', function (Models\Language $language) {
     expect($language)->toBeInstanceOf(Models\Language::class)->not->toBeNull();
     \PHPUnit\Framework\assertFalse($language->active);
-    $result = \Bugloos\LaravelLocalization\Facades\LocalizationFacade::activeLanguage($language->getAttribute('locale'));
-    \PHPUnit\Framework\assertTrue($result);
-    $language = Models\Language::findOnly($language->getAttribute('locale'), true)->first();
+    \Bugloos\LaravelLocalization\Facades\LocalizationFacade::activeLanguage($language->getAttribute('locale'));
+    $language = Models\Language::findActivatedByLocale($language->locale);
     \PHPUnit\Framework\assertTrue($language->active);
-    $result = \Bugloos\LaravelLocalization\Facades\LocalizationFacade::deActiveLanguage($language->locale);
-    \PHPUnit\Framework\assertTrue($result);
-    $language = Models\Language::findOnly($language->locale, false)->first();
+    \Bugloos\LaravelLocalization\Facades\LocalizationFacade::deActiveLanguage($language->locale);
+    $language = Models\Language::findDeActivatedByLocale($language->locale);
     \PHPUnit\Framework\assertNotNull($language);
     \PHPUnit\Framework\assertFalse($language->active);
-});
+})->with('locale');
 
-it('translate a label', function () {
-    $label = Models\Label::factory()->genuine()->createOne();
+it('translate a label', function (Models\Language $language) {
+    $language->activate();
+    $label = Models\Label::factory()->withRealName()->createOne();
 
     \PHPUnit\Framework\assertNotNull($label);
 
-    \PHPUnit\Framework\assertInstanceOf(Models\Language::class, $this->locale);
+    \PHPUnit\Framework\assertInstanceOf(Models\Language::class, $language);
 
     $translate = \Pest\Faker\faker()->sentence();
 
-    $translation = Localization::translate($label, $translate, $this->locale->getAttribute('locale'));
+    $translation = Localization::translate($label, $translate, $language->locale);
 
     \PHPUnit\Framework\assertNotNull($translation);
 
     Assert\assertDatabaseHas('translations', [
         'label_id' => $label->getKey(),
-        'language_id' => $this->locale->getKey()
+        'language_id' => $language->getKey()
     ]);
-});
+})->with('locale');
 
-it('get translated labels', function ($locale) {
+it('get translated labels', function (Models\Language $locale) {
+    $locale->activate();
+    expect($locale->active)->toBeTrue();
     $labels = Models\Label::factory()
         ->for(Models\Category::factory()->createOne())
         ->count(2)
@@ -94,10 +93,10 @@ it('get translated labels', function ($locale) {
 
     $translate = \Pest\Faker\faker()->sentence();
 
-    Localization::translate($labels[0], $translate, $locale);
-    Localization::translate($labels[1], $translate, $locale);
+    Localization::translate($labels[0], $translate, $locale->locale);
+    Localization::translate($labels[1], $translate, $locale->locale);
 
-    $translatedLabels = Localization::translated($locale)
+    $translatedLabels = Localization::translated($locale->locale)
         ->map(
             static function ($category) {
                 return array_keys($category->translated_labels);
@@ -110,10 +109,10 @@ it('get translated labels', function ($locale) {
 
 it('get un-translated labels in specific locale', function ($translate, Models\Language $locale) {
     $labels = Models\Label::factory()->count(2)->create();
-
+$locale->activate();
     Localization::translate($labels[0], $translate, $locale->locale);
 
-    $notTranslated = Localization::notTranslated($locale);
+    $notTranslated = Localization::notTranslated($locale->locale);
 
     \PHPUnit\Framework\assertInstanceOf(Models\Language::class, $notTranslated);
 
@@ -128,8 +127,8 @@ it('get un-translated labels in specific locale', function ($translate, Models\L
 
 it('get un-translated labels with specific category', function ($translate, Models\Language $locale) {
     $category = Models\Category::factory()->createOne();
-
-    $labels = Models\Label::factory()->count(2)->genuine()->for($category)->create();
+$locale->activate();
+    $labels = Models\Label::factory()->count(2)->withRealName()->for($category)->create();
 
     expect($labels)->toBeCollection()->not->toBeEmpty();
 
@@ -154,11 +153,11 @@ it('translates a label into multiple languages', function () {
     $languages = Models\Language::factory()->count(2)->random()->create();
 
     /** @var Models\Label $label */
-    $label = Models\Label::factory()->genuine()->createOne();
+    $label = Models\Label::factory()->withRealName()->createOne();
 
     expect($languages)->toBeCollection()->not->toBeEmpty();
 
-    $languages = $languages->each(static fn (Models\Language $language) => $language->update(['active' => 1]))->sortBy('id');
+    $languages = $languages->each(static fn (Models\Language $language) => $language->activate())->sortBy('id');
 
     $translations = $languages->flatMap(static fn (Models\Language $language) => [$language->locale => fake()->sentence()])->all();
 
@@ -176,6 +175,9 @@ it('translates a label into multiple languages', function () {
 });
 
 it('translate label locally', function () {
+    $language = Models\Language::factory()->createOne();
+    $language->activate();
+    Artisan::call('localization:migrate', ['path' => lang_path(),'--lang' => 'en']);
     $translated = translate('auth.failed', [], 'en');
     \PHPUnit\Framework\assertNotSame('auth.failed', $translated);
 });
